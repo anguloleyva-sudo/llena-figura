@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:sans-serif;background:#f0f9ff;padding:16px}
+h2{color:#1e40af;font-size:17px;margin-bottom:4px}
+.sub{color:#64748b;font-size:11px;margin-bottom:16px}
+.tab-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.tab{padding:6px 13px;border-radius:10px;border:1.5px solid #cbd5e1;background:white;font-size:11px;font-weight:700;cursor:pointer;color:#334155}
+.tab.active{background:#2563eb;color:white;border-color:#2563eb}
+.panel{display:none}.panel.active{display:block}
+.file-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.fname{font-family:monospace;font-size:12px;font-weight:700;color:#1e40af;background:#dbeafe;padding:3px 10px;border-radius:7px}
+.copy-btn{padding:6px 14px;border-radius:8px;border:none;background:#2563eb;color:white;font-size:12px;font-weight:700;cursor:pointer}
+.copy-btn:hover{background:#1d4ed8}
+.copy-btn.ok{background:#10b981}
+textarea{width:100%;height:220px;font-family:monospace;font-size:11px;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px;resize:vertical;background:#f8fafc;color:#1e293b;line-height:1.5}
+.note{background:#fef9c3;border-radius:9px;padding:9px 12px;font-size:11px;color:#78350f;margin-top:10px;line-height:1.7}
+.steps{background:#f0fdf4;border-radius:9px;padding:10px 13px;font-size:11px;color:#166534;margin-top:10px;line-height:1.9}
+</style>
+</head>
+<body>
+<h2>💧 Llena la Figura — Archivos del proyecto</h2>
+<div class="sub">Haz clic en cada pestaña → selecciona el texto → Ctrl+C → pégalo en un archivo nuevo</div>
+
+<div class="tab-row">
+  <button class="tab active" onclick="show(0)">1· package.json</button>
+  <button class="tab" onclick="show(1)">2· index.html</button>
+  <button class="tab" onclick="show(2)">3· vite.config.js</button>
+  <button class="tab" onclick="show(3)">4· src/main.jsx</button>
+  <button class="tab" onclick="show(4)">5· src/App.jsx</button>
+</div>
+
+<!-- Panel 0 -->
+<div class="panel active" id="p0">
+  <div class="file-header">
+    <span class="fname">📄 package.json</span>
+    <button class="copy-btn" onclick="cp(0)">📋 Copiar</button>
+  </div>
+  <textarea id="t0" readonly>{
+  "name": "llena-la-figura",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "three": "^0.128.0",
+    "recharts": "^2.8.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.4.0",
+    "vite": "^4.4.0"
+  }
+}</textarea>
+</div>
+
+<!-- Panel 1 -->
+<div class="panel" id="p1">
+  <div class="file-header">
+    <span class="fname">📄 index.html</span>
+    <button class="copy-btn" onclick="cp(1)">📋 Copiar</button>
+  </div>
+  <textarea id="t1" readonly>&lt;!DOCTYPE html&gt;
+&lt;html lang="es"&gt;
+  &lt;head&gt;
+    &lt;meta charset="UTF-8" /&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0" /&gt;
+    &lt;title&gt;💧 Llena la Figura&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;div id="root"&gt;&lt;/div&gt;
+    &lt;script type="module" src="/src/main.jsx"&gt;&lt;/script&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</textarea>
+</div>
+
+<!-- Panel 2 -->
+<div class="panel" id="p2">
+  <div class="file-header">
+    <span class="fname">📄 vite.config.js</span>
+    <button class="copy-btn" onclick="cp(2)">📋 Copiar</button>
+  </div>
+  <textarea id="t2" readonly>import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()]
+})</textarea>
+</div>
+
+<!-- Panel 3 -->
+<div class="panel" id="p3">
+  <div class="file-header">
+    <span class="fname">📄 src/main.jsx</span>
+    <button class="copy-btn" onclick="cp(3)">📋 Copiar</button>
+  </div>
+  <textarea id="t3" readonly>import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App.jsx'
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  &lt;React.StrictMode&gt;
+    &lt;App /&gt;
+  &lt;/React.StrictMode&gt;
+)</textarea>
+</div>
+
+<!-- Panel 4 — App.jsx: referencia al artefacto principal -->
+<div class="panel" id="p4">
+  <div class="file-header">
+    <span class="fname">📄 src/App.jsx</span>
+    <span style="font-size:11px;color:#64748b">Ver instrucciones abajo ↓</span>
+  </div>
+  <div style="background:#f5f3ff;border-radius:10px;padding:14px 16px;font-size:12px;color:#3b0764;line-height:2">
+    <strong>Este es el archivo más grande.</strong> Para copiarlo:<br>
+    1. En el chat, busca el artefacto llamado <strong>"💧 Llena la Figura — Edición Completa"</strong><br>
+    2. Haz clic en el ícono <strong>⋯</strong> (tres puntos) arriba a la derecha del artefacto<br>
+    3. Selecciona <strong>"Copy code"</strong> o <strong>"Ver código"</strong><br>
+    4. Pega todo ese contenido en un archivo llamado <strong>src/App.jsx</strong>
+  </div>
+</div>
+
+<div class="note">
+  <strong>📁 Estructura de archivos que debes crear:</strong><br>
+  llena-figura/<br>
+  ├── package.json<br>
+  ├── index.html<br>
+  ├── vite.config.js<br>
+  └── src/<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;├── main.jsx<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;└── App.jsx
+</div>
+
+<div class="steps">
+  <strong>🚀 Pasos para publicar en Vercel:</strong><br>
+  1. Crea la estructura de carpetas de arriba en tu PC<br>
+  2. Ve a <strong>github.com</strong> → New repository → "llena-figura"<br>
+  3. Sube los archivos (Upload files)<br>
+  4. Ve a <strong>vercel.com</strong> → New Project → importa tu repo<br>
+  5. Clic en Deploy → ¡obtienes tu link! 🎉
+</div>
+
+<script>
+const tabs = document.querySelectorAll('.tab');
+const panels = document.querySelectorAll('.panel');
+function show(i){
+  tabs.forEach((t,j)=>t.classList.toggle('active',i===j));
+  panels.forEach((p,j)=>p.classList.toggle('active',i===j));
+}
+function cp(i){
+  const ta = document.getElementById('t'+i);
+  ta.select();
+  document.execCommand('copy');
+  const btn = ta.closest('.panel').querySelector('.copy-btn');
+  const orig = btn.textContent;
+  btn.textContent = '✅ ¡Copiado!';
+  btn.classList.add('ok');
+  setTimeout(()=>{btn.textContent=orig;btn.classList.remove('ok');},2000);
+}
+</script>
+</body>
+</html>
