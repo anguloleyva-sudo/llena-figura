@@ -11,16 +11,18 @@ const interpCP=(cps,t)=>{
   for(let i=0;i<cps.length-1;i++){if(t>=cps[i][0]&&t<=cps[i+1][0]){const f=(t-cps[i][0])/(cps[i+1][0]-cps[i][0]);return cps[i][1]+f*(cps[i+1][1]-cps[i][1]);}}
   return cps[cps.length-1][1];
 };
+const volCps=(H,cps,h=H)=>{const N=500,dh=h/N;let v=0;for(let i=0;i<N;i++){const y=(i+.5)*dh,r=interpCP(cps,y/H);v+=Math.PI*r*r*dh;}return v;};
+const fitRcp=(H,cps,ml,extra={})=>{const s=Math.sqrt(ml/volCps(H,cps,H));return{H,ml,cps:cps.map(([t,r])=>[t,+(r*s).toFixed(3)]),...extra};};
 const RCP={
-  r_barril:{H:10,cps:[[0,2.0],[0.05,5.0],[0.13,5.9],[0.21,5.0],[0.26,2.4],[0.33,5.4],[0.42,6.0],[0.50,5.4],[0.55,2.4],[0.61,5.1],[0.70,5.8],[0.78,5.1],[0.84,2.8],[0.90,2.4],[0.95,2.2],[1.0,2.1]]},
-  r_cupcake:{H:13,cps:[[0,3.0],[0.04,3.8],[0.15,4.2],[0.28,4.6],[0.37,4.9],[0.42,5.2],[0.48,5.4],[0.54,5.9],[0.58,5.9],[0.65,4.8],[0.74,3.5],[0.82,2.5],[0.89,1.8],[0.94,1.4],[1.0,1.1]]},
-  r_mancuerna:{H:25,cps:[[0,1.5],[0.04,3.5],[0.10,5.5],[0.17,5.9],[0.23,5.5],[0.28,3.8],[0.32,2.0],[0.37,1.4],[0.41,1.3],[0.45,1.3],[0.50,1.3],[0.55,1.4],[0.59,2.0],[0.64,3.8],[0.70,5.5],[0.77,5.9],[0.83,5.5],[0.88,3.5],[0.92,2.0],[0.95,1.5],[0.98,1.2],[1.0,0.8]]},
-  r_escalonado:{H:11,cps:[[0,3.2],[0.04,4.2],[0.30,4.2],[0.34,3.7],[0.38,4.8],[0.94,4.8],[1.0,5.0]]},
-  r_pilsner:{H:19,cps:[[0,1.1],[0.04,3.2],[0.08,2.6],[0.16,3.0],[0.35,3.8],[0.65,5.0],[0.87,5.6],[1.0,5.9]]}
+  r_barril:fitRcp(10.8,[[0,3.15],[0.03,4.45],[0.08,5.15],[0.16,5.45],[0.23,4.85],[0.28,2.75],[0.33,4.65],[0.42,5.35],[0.50,5.55],[0.57,2.78],[0.62,4.70],[0.71,5.38],[0.80,5.12],[0.86,3.15],[0.92,2.95],[1,3.35]],458,{marks:[.28,.57,.86],visual:{glass:0x16a34a,edge:0x166534,water:0x22c55e,rings:[.03,.09,.25,.28,.34,.53,.57,.63,.83,.89,.97],cap:{hF:.06,rScale:1.22,color:0xbbf7d0,opacity:.85}}}),
+  r_cupcake:fitRcp(13.4,[[0,2.75],[0.04,3.55],[0.16,3.90],[0.30,4.25],[0.43,4.55],[0.50,5.35],[0.55,5.75],[0.60,5.35],[0.67,4.35],[0.75,3.05],[0.82,1.85],[0.89,1.18],[0.97,1.18],[1,1.42]],500,{marks:[.50,.60,.82,.89],visual:{glass:0x06b6d4,edge:0x0e7490,water:0x22d3ee,rings:[.06,.18,.30,.42,.50,.56,.62,.72,.82,.90],ribs:{from:.03,to:.50,count:18,opacity:.36},waves:[{t:.55,amp:.11,lobes:10},{t:.61,amp:.09,lobes:9},{t:.68,amp:.07,lobes:8}],cap:{hF:.10,rScale:1.65,color:0xc0c0c0,opacity:.9}}}),
+  r_mancuerna:fitRcp(25.8,[[0,2.35],[0.03,3.85],[0.08,4.45],[0.18,4.52],[0.26,4.10],[0.30,1.55],[0.37,1.15],[0.52,1.15],[0.58,1.55],[0.63,3.70],[0.70,4.62],[0.82,4.66],[0.88,3.35],[0.92,1.35],[0.97,1.25],[1,1.05]],1000,{marks:[.29,.58,.90],visual:{glass:0xf472b6,edge:0xbe185d,water:0xec4899,rings:[.04,.10,.24,.30,.52,.58,.66,.84,.91,.96],ribs:{from:.63,to:.86,count:20,opacity:.20},bands:[{from:.05,to:.25,color:0xdb2777,opacity:.18},{from:.64,to:.86,color:0xdb2777,opacity:.18}],cap:{hF:.09,rScale:1.20,color:0x93c5fd,opacity:.75}}}),
+  r_escalonado:fitRcp(13.6,[[0,2.80],[0.04,3.35],[0.34,3.35],[0.38,3.50],[0.41,4.35],[0.93,4.35],[0.98,4.45],[1,4.42]],490,{marks:[.39],visual:{glass:0xdbeafe,edge:0x64748b,water:0x60a5fa,rings:[.03,.07,.34,.39,.93,.98],ribs:{from:.05,to:.36,count:24,opacity:.14}}}),
+  r_pilsner:fitRcp(20.4,[[0,1.80],[0.03,2.70],[0.07,2.95],[0.12,2.15],[0.25,2.05],[0.38,2.40],[0.58,3.25],[0.77,4.10],[0.92,4.58],[1,4.72]],500,{marks:[.12,.38,.77],visual:{glass:0xdbeafe,edge:0x64748b,water:0x38bdf8,rings:[.03,.07,.12,.38,.77,.95,1],ribs:{from:.15,to:.92,count:16,opacity:.16}}})
 };
 const recVolAt=(key,h)=>{const{H,cps}=RCP[key],N=300,dh=h/N;let v=0;for(let i=0;i<N;i++){const y=(i+.5)*dh,r=interpCP(cps,y/H);v+=Math.PI*r*r*dh;}return v;};
 const recHAtV=(key,v)=>{const H=RCP[key].H;let lo=0,hi=H;for(let i=0;i<60;i++){const m=(lo+hi)/2;recVolAt(key,m)<v?lo=m:hi=m;}return(lo+hi)/2;};
-const recConstrictions=(key)=>{const{H,cps}=RCP[key];return cps.filter(([,r],i)=>i>0&&i<cps.length-1&&r<cps[i-1][1]&&r<cps[i+1][1]).map(([t])=>+(t*H).toFixed(2));};
+const recConstrictions=(key)=>{const{H,cps,marks}=RCP[key];if(marks?.length)return marks.map(t=>+(t*H).toFixed(2));return cps.filter(([,r],i)=>i>0&&i<cps.length-1&&r<cps[i-1][1]&&r<cps[i+1][1]).map(([t])=>+(t*H).toFixed(2));};
 
 const FIGS={
   cubo:{name:"Cubo",icon:"⬛",faces:6,edges:12,vertices:8,dims:[{key:"a",label:"Lado",unit:"cm",def:8}],vol:({a})=>a**3,formula:({a})=>`V = a³ = ${a}³ = ${(a**3).toFixed(1)} cm³`,hAtV:(v,{a})=>v/(a*a),maxH:({a})=>+a,shape:"rect"},
@@ -37,6 +39,14 @@ const FIGS={
   r_escalonado:{name:"Vaso Escalonado",icon:"🥃",isRec:true,ml:490,dims:[],vol:()=>recVolAt('r_escalonado',RCP.r_escalonado.H),formula:()=>`V ≈ ${recVolAt('r_escalonado',RCP.r_escalonado.H).toFixed(0)} ml`,hAtV:(v)=>recHAtV('r_escalonado',v),maxH:()=>RCP.r_escalonado.H,shape:"lathe",profile:(t)=>interpCP(RCP.r_escalonado.cps,t),desc:"Cilindro inferior + escalón → cilindro superior más ancho",hint:"Dos tramos casi rectos con un pequeño salto de pendiente"},
   r_pilsner:{name:"Copa Pilsner",icon:"🍺",isRec:true,ml:500,dims:[],vol:()=>recVolAt('r_pilsner',RCP.r_pilsner.H),formula:()=>`V ≈ ${recVolAt('r_pilsner',RCP.r_pilsner.H).toFixed(0)} ml`,hAtV:(v)=>recHAtV('r_pilsner',v),maxH:()=>RCP.r_pilsner.H,shape:"lathe",profile:(t)=>interpCP(RCP.r_pilsner.cps,t),desc:"Pie muy estrecho, cuerpo troncocónico creciente",hint:"Empieza muy empinada y se aplana cada vez más al subir"}
 };
+
+[
+  ["r_barril","Vaso barril triple","B3","Tres barriles anchos con dos cinturas marcadas y tapa verde plana","Cintura = sube rapido; panza ancha = sube lento. Deben aparecer tres tramos lentos."],
+  ["r_cupcake","Vaso cupcake","CC","Base acanalada que se abre, domo ondulado y cuello/corona muy angostos","La grafica se aplana en la parte ancha y se vuelve muy inclinada en el cuello."],
+  ["r_mancuerna","Botella Gym Water","GY","Dos depositos rosas unidos por un tubo central largo y angosto","En los depositos la altura cambia lento; en el tubo central cambia muy rapido."],
+  ["r_escalonado","Vaso escalonado 490","490","Cilindro inferior mas angosto, escalon central y cilindro superior mas ancho","La grafica cambia de pendiente casi de golpe en el escalon."],
+  ["r_pilsner","Copa pilsner","PL","Base gruesa, cintura angosta y cuerpo que se abre hacia la boca","Al inicio sube rapido; al abrirse la copa la curva se aplana cada vez mas."]
+].forEach(([key,name,icon,desc,hint])=>Object.assign(FIGS[key],{name,icon,desc,hint,ml:RCP[key].ml,water:RCP[key].visual.water,visual:RCP[key].visual,formula:()=>`V ~= ${recVolAt(key,RCP[key].H).toFixed(0)} ml`}));
 
 const QUESTIONS={
   cubo:["¿Qué pasa con el volumen si duplicas el lado?","¿Por qué la gráfica es siempre una línea recta?","¿Cuántos cubos de lado 4 caben en uno de lado 8?"],
@@ -68,8 +78,23 @@ const makeGeo=(fk,dims)=>{
   }
 };
 
+const ringGeom=(r,y,z=0,amp=0,lobes=0,phase=0)=>{
+  const pts=[];for(let i=0;i<=96;i++){const a=i/96*Math.PI*2,rr=r*(1+(lobes?amp*Math.sin(lobes*a+phase):0));pts.push(new THREE.Vector3(Math.cos(a)*rr,y,z+Math.sin(a)*rr));}
+  return new THREE.BufferGeometry().setFromPoints(pts);
+};
+const addRing=(g,r,y,color,opacity=.55,amp=0,lobes=0,phase=0)=>g.add(new THREE.Line(ringGeom(r,y,0,amp,lobes,phase),new THREE.LineBasicMaterial({color,transparent:true,opacity})));
+const addLatheBand=(g,pf,vd,S,mHS,band)=>{
+  const pp=[];for(let i=0;i<=18;i++){const t=band.from+(band.to-band.from)*i/18;pp.push(new THREE.Vector2(Math.max(pf(t,vd)*S*1.012,.05),t*mHS-mHS/2));}
+  g.add(new THREE.Mesh(new THREE.LatheGeometry(pp,64),new THREE.MeshBasicMaterial({color:band.color,transparent:true,opacity:band.opacity??.16,side:THREE.FrontSide,depthWrite:false})));
+};
+const addLatheRibs=(g,pf,vd,S,mHS,ribs,color)=>{
+  for(let i=0;i<ribs.count;i++){const a=i/ribs.count*Math.PI*2,pts=[];for(let j=0;j<=28;j++){const t=ribs.from+(ribs.to-ribs.from)*j/28,r=pf(t,vd)*S*1.018;pts.push(new THREE.Vector3(Math.cos(a)*r,t*mHS-mHS/2,Math.sin(a)*r));}g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color,transparent:true,opacity:ribs.opacity??.24})));}  
+};
+const hexColor=(n,fb="#1e40af")=>typeof n==="number"?`#${n.toString(16).padStart(6,"0")}`:fb;
+
 function buildScene(fk,dims,wc,st){
   if(st.group){st.group.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material)o.material.dispose();});st.scene.remove(st.group);}
+  const fig=FIGS[fk],visual=fig.visual||{},edgeCol=visual.edge||0x1e40af,glassCol=visual.glass||0xbfdbfe;
   const{geo,mHS}=makeGeo(fk,dims);st.mHS=mHS;
   geo.computeBoundingSphere();
   const outerR=Math.max(geo.boundingSphere?.radius||mHS*.55,mHS*.55);
@@ -85,30 +110,40 @@ function buildScene(fk,dims,wc,st){
 
   // 2. Shell exterior (vidrio/cristal)
   g.add(new THREE.Mesh(geo,new THREE.MeshPhongMaterial({
-    color:0xbfdbfe,specular:0xffffff,shininess:80,transparent:true,opacity:.12,side:THREE.FrontSide,depthWrite:false,renderOrder:2
+    color:glassCol,specular:0xffffff,shininess:95,transparent:true,opacity:visual.glassOpacity??.16,side:THREE.FrontSide,depthWrite:false,renderOrder:2
   })));
   g.add(new THREE.Mesh(geo.clone(),new THREE.MeshPhongMaterial({
-    color:0xdbeafe,transparent:true,opacity:.06,side:THREE.BackSide,depthWrite:false,renderOrder:2
+    color:glassCol,transparent:true,opacity:.07,side:THREE.BackSide,depthWrite:false,renderOrder:2
   })));
 
   // 3. Estructura (aristas o perfiles)
   if(sh==='rect'||sh==='pyr'){
-    g.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:0x1e40af})));
+    g.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:edgeCol})));
   }else if(sh==='cyl'||sh==='cone'){
     const vd=getVD(fk,dims),S=10/FIGS[fk].maxH(vd),rBot=(vd.r||0)*S,rTop=sh==='cone'?0:rBot;
     const mkRing=(r,y)=>{const pts=[];for(let i=0;i<=48;i++){const a=i/48*Math.PI*2;pts.push(new THREE.Vector3(Math.cos(a)*r,y,Math.sin(a)*r));}return new THREE.BufferGeometry().setFromPoints(pts);};
-    if(rTop>0)g.add(new THREE.Line(mkRing(rTop,mHS/2),new THREE.LineBasicMaterial({color:0x1e40af})));
-    g.add(new THREE.Line(mkRing(rBot,-mHS/2),new THREE.LineBasicMaterial({color:0x1e40af})));
+    if(rTop>0)g.add(new THREE.Line(mkRing(rTop,mHS/2),new THREE.LineBasicMaterial({color:edgeCol})));
+    g.add(new THREE.Line(mkRing(rBot,-mHS/2),new THREE.LineBasicMaterial({color:edgeCol})));
     const nL=sh==='cone'?1:4;
-    for(let i=0;i<nL;i++){const a=i/nL*Math.PI*2;const vg=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(Math.cos(a)*rTop,mHS/2,Math.sin(a)*rTop),new THREE.Vector3(Math.cos(a)*rBot,-mHS/2,Math.sin(a)*rBot)]);g.add(new THREE.Line(vg,new THREE.LineBasicMaterial({color:0x1e40af})));}
+    for(let i=0;i<nL;i++){const a=i/nL*Math.PI*2;const vg=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(Math.cos(a)*rTop,mHS/2,Math.sin(a)*rTop),new THREE.Vector3(Math.cos(a)*rBot,-mHS/2,Math.sin(a)*rBot)]);g.add(new THREE.Line(vg,new THREE.LineBasicMaterial({color:edgeCol})));}
   }else if(sh==='sphere'){
     const vd=getVD(fk,dims),r=vd.r*(10/(2*vd.r));
-    [0,.5,-.5].forEach(yf=>{const yr=yf*mHS*.8,cr=Math.sqrt(Math.max(0,r*r-yr*yr));const pts=[];for(let i=0;i<=48;i++){const a=i/48*Math.PI*2;pts.push(new THREE.Vector3(Math.cos(a)*cr,yr,Math.sin(a)*cr));}g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:0x1e40af,transparent:true,opacity:.5})));});
+    [0,.5,-.5].forEach(yf=>{const yr=yf*mHS*.8,cr=Math.sqrt(Math.max(0,r*r-yr*yr));const pts=[];for(let i=0;i<=48;i++){const a=i/48*Math.PI*2;pts.push(new THREE.Vector3(Math.cos(a)*cr,yr,Math.sin(a)*cr));}g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:edgeCol,transparent:true,opacity:.5})));});
   }else if(sh==='lathe'){
-    g.add(new THREE.Mesh(geo.clone(),new THREE.MeshBasicMaterial({color:0x1e40af,wireframe:true,transparent:true,opacity:.04})));
+    g.add(new THREE.Mesh(geo.clone(),new THREE.MeshBasicMaterial({color:edgeCol,wireframe:true,transparent:true,opacity:.04})));
     const vd2=getVD(fk,dims),S2=10/FIGS[fk].maxH(vd2),pf=FIGS[fk].profile;
-    [0,1].forEach(t=>{const r=pf(t,vd2)*S2;const pts=[];for(let i=0;i<=48;i++){const a=i/48*Math.PI*2;pts.push(new THREE.Vector3(Math.cos(a)*r,t*mHS-mHS/2,Math.sin(a)*r));}g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:0x1e40af})));});
-    for(let i=0;i<4;i++){const a=i/4*Math.PI*2;const pts2=[];for(let j=0;j<=32;j++){const t=j/32,r=pf(t,vd2)*S2;pts2.push(new THREE.Vector3(Math.cos(a)*r,t*mHS-mHS/2,Math.sin(a)*r));}g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts2),new THREE.LineBasicMaterial({color:0x1e40af,transparent:true,opacity:.6})));}
+    [0,1].forEach(t=>{const r=pf(t,vd2)*S2;const pts=[];for(let i=0;i<=48;i++){const a=i/48*Math.PI*2;pts.push(new THREE.Vector3(Math.cos(a)*r,t*mHS-mHS/2,Math.sin(a)*r));}g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:edgeCol})));});
+    for(let i=0;i<4;i++){const a=i/4*Math.PI*2;const pts2=[];for(let j=0;j<=32;j++){const t=j/32,r=pf(t,vd2)*S2;pts2.push(new THREE.Vector3(Math.cos(a)*r,t*mHS-mHS/2,Math.sin(a)*r));}g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts2),new THREE.LineBasicMaterial({color:edgeCol,transparent:true,opacity:.6})));}
+    visual.bands?.forEach(b=>addLatheBand(g,pf,vd2,S2,mHS,b));
+    visual.rings?.forEach((t,i)=>addRing(g,pf(t,vd2)*S2*1.01,t*mHS-mHS/2,edgeCol,.42+(i%2)*.18));
+    if(visual.ribs)addLatheRibs(g,pf,vd2,S2,mHS,visual.ribs,edgeCol);
+    visual.waves?.forEach((w,i)=>addRing(g,pf(w.t,vd2)*S2*1.015,w.t*mHS-mHS/2,edgeCol,.64,w.amp,w.lobes,i*.9));
+    if(visual.cap){
+      const topR=pf(1,vd2)*S2*(visual.cap.rScale||1),capH=mHS*(visual.cap.hF||.06);
+      const cap=new THREE.Mesh(new THREE.CylinderGeometry(topR,topR,capH,64),new THREE.MeshPhongMaterial({color:visual.cap.color,specular:0xffffff,shininess:120,transparent:true,opacity:visual.cap.opacity??.78,depthWrite:false}));
+      cap.position.y=mHS/2+capH/2;cap.renderOrder=6;g.add(cap);
+      addRing(g,topR,mHS/2,edgeCol,.45);addRing(g,topR,mHS/2+capH,edgeCol,.45);
+    }
   }
 
   // 4. Agua cara frontal (principal)
@@ -118,7 +153,7 @@ function buildScene(fk,dims,wc,st){
 
   // 5. Superficie del agua (disco)
   const cap=new THREE.Mesh(new THREE.CircleGeometry(1,48),new THREE.MeshPhongMaterial({
-    color:0xbfdbfe,specular:0xffffff,shininess:200,transparent:true,opacity:.95,side:THREE.DoubleSide,depthWrite:false,renderOrder:4
+    color:wc,specular:0xffffff,shininess:200,transparent:true,opacity:.82,side:THREE.DoubleSide,depthWrite:false,renderOrder:4
   }));
   cap.rotation.x=-Math.PI/2;cap.visible=false;g.add(cap);
   st.cap=cap;st.capShape=sh;st.capVd=getVD(fk,dims);st.capS=10/FIGS[fk].maxH(st.capVd);st.capFig=FIGS[fk];
@@ -196,7 +231,7 @@ function Fig3D({fk,dims,fillPct,wc=0x3b82f6}){
   return <canvas ref={cRef} width={200} height={200} style={{width:"100%",height:200,cursor:"grab",display:"block",touchAction:"none"}} onMouseDown={e=>dn(e.clientX,e.clientY)} onMouseMove={e=>mv(e.clientX,e.clientY)} onMouseUp={up} onMouseLeave={up} onTouchStart={e=>dn(e.touches[0].clientX,e.touches[0].clientY)} onTouchMove={e=>mv(e.touches[0].clientX,e.touches[0].clientY)} onTouchEnd={up}/>;
 }
 
-function FillReadout({pct,h,maxH,vol,total,color="#2563eb"}){
+function FillReadout({pct,h,maxH,vol,total,color="#2563eb",unit="cm3"}){
   return(
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,margin:"7px 0 3px"}}>
       <div style={{background:"#eff6ff",borderRadius:8,padding:"5px 6px",border:`1px solid ${color}22`}}>
@@ -209,19 +244,22 @@ function FillReadout({pct,h,maxH,vol,total,color="#2563eb"}){
       </div>
       <div style={{gridColumn:"1 / -1",background:"#ecfeff",borderRadius:8,padding:"5px 6px",border:"1px solid #bae6fd"}}>
         <div style={{fontSize:8,color:"#64748b",fontWeight:700,textTransform:"uppercase"}}>Volumen llenado</div>
-        <div style={{fontSize:13,color:"#0e7490",fontWeight:800}}>{vol.toFixed(1)} / {total.toFixed(1)} cm3</div>
+        <div style={{fontSize:13,color:"#0e7490",fontWeight:800}}>{vol.toFixed(1)} / {total.toFixed(1)} {unit}</div>
       </div>
     </div>
   );
 }
 
 function ProfileSketch({rkey,w=46,h=64}){
-  const{cps}=RCP[rkey];const maxR=Math.max(...cps.map(p=>p[1]));const N=80;
+  const{cps,marks,visual={}}=RCP[rkey];const maxR=Math.max(...cps.map(p=>p[1]));const N=80;
   const toXY=(t,r)=>[(w/2)+(r/maxR)*(w/2-1),h-t*h];
   const rPts=Array.from({length:N+1},(_,i)=>{const t=i/N;return toXY(t,interpCP(cps,t));});
   const lPts=[...rPts].reverse().map(([x,y])=>[w-x,y]);
   const path=[...rPts,...lPts].map(([x,y],i)=>`${i===0?'M':'L'}${x.toFixed(1)},${y.toFixed(1)}`).join(' ')+'Z';
-  return <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{display:'block'}}><path d={path} fill="#bfdbfe" stroke="#1e40af" strokeWidth="1.5" strokeLinejoin="round"/></svg>;
+  return <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{display:'block'}}>
+    <path d={path} fill={hexColor(visual.glass,"#bfdbfe")} fillOpacity=".42" stroke={hexColor(visual.edge,"#1e40af")} strokeWidth="1.5" strokeLinejoin="round"/>
+    {(marks||[]).map((t,i)=><line key={i} x1={w*.18} x2={w*.82} y1={h-t*h} y2={h-t*h} stroke={hexColor(visual.edge,"#1e40af")} strokeWidth=".8" strokeDasharray="2 2" opacity=".55"/>)}
+  </svg>;
 }
 
 function InfoCard({fk,dims}){
@@ -314,6 +352,7 @@ export default function App(){
   const pct1=Math.min(v1/tV1,1),hc1=Math.min(fig1.hAtV(Math.max(v1,0),vd1),mH1);
   const fig2=FIGS[fk2],vd2=getVD(fk2,dims2),tV2=fig2.vol(vd2),mH2=fig2.maxH(vd2);
   const pct2=Math.min(v2/tV2,1),hc2=Math.min(fig2.hAtV(Math.max(v2,0),vd2),mH2);
+  const unit1=fig1.isRec?"ml":"cm3",unit2=fig2.isRec?"ml":"cm3";
   d1R.current={tV:tV1,mH:mH1,fig:fig1,vd:vd1};d2R.current={tV:tV2,mH:mH2,fig:fig2,vd:vd2};
 
   const rst=()=>{setRun(false);v1R.current=v2R.current=tR.current=0;chR.current=[{t:0,h1:0,h2:0}];setV1(0);setV2(0);setST(0);setCh([{t:0,h1:0,h2:0}]);};
@@ -417,12 +456,12 @@ export default function App(){
             </div>
             {!isRec&&FigSel(fk1,cf1,isCmp?fk2:null,false)}
             {!isRec&&<DimInputs fk={fk1} dims={dims1} setDims={setDims1} rst={rst} accent="#93c5fd"/>}
-            <Fig3D fk={fk1} dims={dims1} fillPct={pct1} wc={0x3b82f6}/>
-            <FillReadout pct={pct1} h={hc1} maxH={mH1} vol={v1} total={tV1} color="#2563eb"/>
+            <Fig3D fk={fk1} dims={dims1} fillPct={pct1} wc={fig1.water||0x3b82f6}/>
+            <FillReadout pct={pct1} h={hc1} maxH={mH1} vol={v1} total={tV1} color={isRec?hexColor(fig1.water,"#2563eb"):"#2563eb"} unit={unit1}/>
             <div style={{fontSize:9,color:"#94a3b8",textAlign:"center",marginTop:2,marginBottom:2}}>🖱️ arrastra para rotar</div>
             {ProgBar(pct1,"#3b82f6")}
             <div style={{fontSize:10,color:"#475569",marginTop:5,lineHeight:1.8,textAlign:"center"}}>
-              <div><strong>{v1.toFixed(1)}</strong>/<strong>{tV1.toFixed(1)}</strong> cm³ · <strong>{(pct1*100).toFixed(1)}%</strong></div>
+              <div><strong>{v1.toFixed(1)}</strong>/<strong>{tV1.toFixed(1)}</strong> {unit1} · <strong>{(pct1*100).toFixed(1)}%</strong></div>
               <div>h: <strong>{hc1.toFixed(2)}</strong>/<strong>{mH1.toFixed(1)}</strong> cm · <strong>{sT.toFixed(1)}</strong>s</div>
             </div>
           </div>
@@ -433,12 +472,12 @@ export default function App(){
               <div style={{fontWeight:700,color:"#ea580c",fontSize:12,marginBottom:8}}>🟠 Figura 2</div>
               {FigSel(fk2,cf2,fk1,false)}
               <DimInputs fk={fk2} dims={dims2} setDims={setDims2} rst={rst} accent="#fdba74"/>
-              <Fig3D fk={fk2} dims={dims2} fillPct={pct2} wc={0xf97316}/>
-              <FillReadout pct={pct2} h={hc2} maxH={mH2} vol={v2} total={tV2} color="#ea580c"/>
+              <Fig3D fk={fk2} dims={dims2} fillPct={pct2} wc={fig2.water||0xf97316}/>
+              <FillReadout pct={pct2} h={hc2} maxH={mH2} vol={v2} total={tV2} color={hexColor(fig2.water,"#ea580c")} unit={unit2}/>
               <div style={{fontSize:9,color:"#94a3b8",textAlign:"center",marginTop:2,marginBottom:2}}>🖱️ arrastra para rotar</div>
               {ProgBar(pct2,"#f97316")}
               <div style={{fontSize:10,color:"#475569",marginTop:5,lineHeight:1.8,textAlign:"center"}}>
-                <div><strong>{v2.toFixed(1)}</strong>/<strong>{tV2.toFixed(1)}</strong> cm³ · <strong>{(pct2*100).toFixed(1)}%</strong></div>
+                <div><strong>{v2.toFixed(1)}</strong>/<strong>{tV2.toFixed(1)}</strong> {unit2} · <strong>{(pct2*100).toFixed(1)}%</strong></div>
                 <div>h: <strong>{hc2.toFixed(2)}</strong>/<strong>{mH2.toFixed(1)}</strong> cm</div>
               </div>
             </div>
