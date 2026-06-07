@@ -1,1246 +1,550 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Variación de cambio - Llenado de recipientes</title>
-
-  <style>
-    :root {
-      --bg: #eef3f8;
-      --panel: #ffffff;
-      --text: #172033;
-      --muted: #64748b;
-      --blue: #1677ff;
-      --blue-dark: #0756c8;
-      --orange: #ff8a00;
-      --grid: #dbe3ef;
-      --axis: #334155;
-      --glass: rgba(255, 255, 255, 0.45);
-      --shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
-      --radius: 22px;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: radial-gradient(circle at top left, #ffffff 0, var(--bg) 45%, #e6edf7 100%);
-      color: var(--text);
-    }
-
-    .app {
-      width: min(1450px, 96vw);
-      margin: 24px auto 40px;
-    }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: end;
-      gap: 18px;
-      margin-bottom: 18px;
-    }
-
-    .header h1 {
-      margin: 0;
-      font-size: clamp(1.7rem, 3vw, 2.7rem);
-      letter-spacing: -0.04em;
-    }
-
-    .header p {
-      margin: 8px 0 0;
-      color: var(--muted);
-      font-size: 1rem;
-      max-width: 760px;
-    }
-
-    .controls {
-      background: rgba(255, 255, 255, 0.75);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(148, 163, 184, 0.28);
-      box-shadow: var(--shadow);
-      border-radius: var(--radius);
-      padding: 16px;
-      display: grid;
-      grid-template-columns: 1.4fr 0.8fr 0.8fr auto auto;
-      gap: 12px;
-      align-items: end;
-      margin-bottom: 18px;
-    }
-
-    .field {
-      display: grid;
-      gap: 6px;
-    }
-
-    label {
-      font-weight: 700;
-      font-size: 0.88rem;
-      color: #334155;
-    }
-
-    select,
-    input {
-      width: 100%;
-      border: 1px solid #cbd5e1;
-      background: #fff;
-      border-radius: 14px;
-      padding: 12px 13px;
-      font-size: 1rem;
-      color: var(--text);
-      outline: none;
-    }
-
-    select:focus,
-    input:focus {
-      border-color: var(--blue);
-      box-shadow: 0 0 0 4px rgba(22, 119, 255, 0.14);
-    }
-
-    button {
-      border: 0;
-      border-radius: 15px;
-      padding: 13px 18px;
-      font-weight: 800;
-      font-size: 0.98rem;
-      cursor: pointer;
-      transition: transform 0.12s ease, filter 0.12s ease;
-    }
-
-    button:hover {
-      transform: translateY(-1px);
-      filter: brightness(1.03);
-    }
-
-    .primary {
-      color: #fff;
-      background: linear-gradient(135deg, var(--blue), var(--blue-dark));
-    }
-
-    .secondary {
-      color: #0f172a;
-      background: #e2e8f0;
-    }
-
-    .workspace {
-      display: grid;
-      grid-template-columns: minmax(320px, 0.9fr) minmax(480px, 1.45fr);
-      gap: 18px;
-    }
-
-    .panel {
-      background: rgba(255, 255, 255, 0.92);
-      border: 1px solid rgba(148, 163, 184, 0.28);
-      box-shadow: var(--shadow);
-      border-radius: var(--radius);
-      padding: 16px;
-      overflow: hidden;
-    }
-
-    .panel-title {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 14px;
-      margin-bottom: 12px;
-      font-weight: 900;
-      color: #0f172a;
-    }
-
-    .hint {
-      font-size: 0.85rem;
-      color: var(--muted);
-      font-weight: 700;
-      text-align: right;
-    }
-
-    #vesselSvg {
-      width: 100%;
-      height: min(72vh, 650px);
-      min-height: 520px;
-      display: block;
-      border-radius: 18px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.9), rgba(241,245,249,0.7)),
-        repeating-linear-gradient(0deg, transparent 0 28px, rgba(148,163,184,0.08) 29px 30px);
-    }
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
-    .stat {
-      background: linear-gradient(180deg, #f8fafc, #eef4ff);
-      border: 1px solid #dbeafe;
-      border-radius: 18px;
-      padding: 12px;
-    }
-
-    .stat .name {
-      color: var(--muted);
-      font-weight: 800;
-      font-size: 0.78rem;
-      margin-bottom: 4px;
-    }
-
-    .stat .value {
-      font-size: clamp(1rem, 1.7vw, 1.45rem);
-      font-weight: 950;
-      letter-spacing: -0.04em;
-    }
-
-    .chart {
-      width: 100%;
-      height: 315px;
-      display: block;
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 18px;
-      margin-bottom: 12px;
-    }
-
-    .bottom-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 18px;
-      margin-top: 18px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.94rem;
-    }
-
-    th,
-    td {
-      padding: 10px 12px;
-      border-bottom: 1px solid #e2e8f0;
-      text-align: right;
-    }
-
-    th:first-child,
-    td:first-child {
-      text-align: left;
-    }
-
-    th {
-      color: #475569;
-      background: #f8fafc;
-    }
-
-    tr.current-row td {
-      background: #eff6ff;
-      color: var(--blue-dark);
-      font-weight: 900;
-    }
-
-    .explanation {
-      font-size: 1.02rem;
-      line-height: 1.55;
-      color: #334155;
-      margin: 0 0 16px;
-    }
-
-    .meter-wrap {
-      margin-top: 12px;
-    }
-
-    .meter-label {
-      display: flex;
-      justify-content: space-between;
-      font-weight: 800;
-      color: #475569;
-      margin-bottom: 8px;
-      font-size: 0.9rem;
-    }
-
-    .meter {
-      height: 18px;
-      background: #e2e8f0;
-      border-radius: 999px;
-      overflow: hidden;
-    }
-
-    .meter-fill {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #22c55e, #facc15, #ef4444);
-      border-radius: 999px;
-      transition: width 0.15s linear;
-    }
-
-    .formula {
-      background: #0f172a;
-      color: #e0f2fe;
-      border-radius: 18px;
-      padding: 14px 16px;
-      font-weight: 800;
-      margin-top: 14px;
-      text-align: center;
-      font-size: 1.1rem;
-    }
-
-    .glass-outline {
-      fill: rgba(255,255,255,0.1);
-      stroke: rgba(15,23,42,0.58);
-      stroke-width: 3;
-      vector-effect: non-scaling-stroke;
-    }
-
-    .glass-highlight {
-      fill: none;
-      stroke: rgba(255,255,255,0.85);
-      stroke-width: 5;
-      stroke-linecap: round;
-      opacity: 0.8;
-    }
-
-    .ridge {
-      fill: none;
-      stroke: rgba(15,23,42,0.26);
-      stroke-width: 2;
-      opacity: 0.75;
-    }
-
-    .ridge-light {
-      fill: none;
-      stroke: rgba(255,255,255,0.8);
-      stroke-width: 2;
-      opacity: 0.8;
-    }
-
-    .water-surface {
-      stroke: #045ee8;
-      stroke-width: 4;
-      stroke-linecap: round;
-      filter: drop-shadow(0 2px 3px rgba(4,94,232,0.35));
-    }
-
-    .ruler-line {
-      stroke: #334155;
-      stroke-width: 2;
-    }
-
-    .ruler-tick {
-      stroke: #475569;
-      stroke-width: 2;
-    }
-
-    .ruler-text {
-      font-size: 13px;
-      fill: #334155;
-      font-weight: 800;
-    }
-
-    .svg-label {
-      font-size: 15px;
-      fill: #0f172a;
-      font-weight: 900;
-    }
-
-    .small-label {
-      font-size: 12px;
-      fill: #475569;
-      font-weight: 800;
-    }
-
-    @media (max-width: 1050px) {
-      .controls,
-      .workspace,
-      .bottom-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .stats {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      .header {
-        display: block;
-      }
-    }
-  </style>
-</head>
-
-<body>
-  <main class="app">
-    <header class="header">
-      <div>
-        <h1>Llenado de recipientes</h1>
-        <p>
-          Observa cómo cambia la altura del agua con respecto al tiempo. La escala de la gráfica queda fija desde el inicio,
-          como cuando el estudiante prepara sus ejes en la libreta.
-        </p>
-      </div>
-    </header>
-
-    <section class="controls">
-      <div class="field">
-        <label for="vesselSelect">Recipiente</label>
-        <select id="vesselSelect"></select>
-      </div>
-
-      <div class="field">
-        <label for="flowInput">Flujo Q, en mL/s</label>
-        <input id="flowInput" type="number" min="1" step="1" value="22" />
-      </div>
-
-      <div class="field">
-        <label for="speedInput">Velocidad visual</label>
-        <select id="speedInput">
-          <option value="0.5">0.5x</option>
-          <option value="1" selected>1x</option>
-          <option value="2">2x</option>
-          <option value="4">4x</option>
-          <option value="8">8x</option>
-        </select>
-      </div>
-
-      <button id="playBtn" class="primary">Iniciar</button>
-      <button id="resetBtn" class="secondary">Reiniciar</button>
-    </section>
-
-    <section class="workspace">
-      <article class="panel">
-        <div class="panel-title">
-          <span>Recipiente con regla</span>
-          <span id="shapeHint" class="hint"></span>
-        </div>
-        <svg id="vesselSvg" viewBox="0 0 360 560" role="img" aria-label="Simulación de llenado"></svg>
-      </article>
-
-      <article class="panel">
-        <div class="stats">
-          <div class="stat">
-            <div class="name">Tiempo</div>
-            <div id="statTime" class="value">0.0 s</div>
-          </div>
-          <div class="stat">
-            <div class="name">Altura</div>
-            <div id="statHeight" class="value">0.0 cm</div>
-          </div>
-          <div class="stat">
-            <div class="name">dh/dt</div>
-            <div id="statRate" class="value">0.00 cm/s</div>
-          </div>
-          <div class="stat">
-            <div class="name">Volumen</div>
-            <div id="statVolume" class="value">0 mL</div>
-          </div>
-        </div>
-
-        <div class="panel-title">
-          <span>Gráfica altura-tiempo, h(t)</span>
-          <span class="hint">Ejes fijos desde el inicio</span>
-        </div>
-        <svg id="heightChart" class="chart" viewBox="0 0 640 315"></svg>
-
-        <div class="panel-title">
-          <span>Gráfica de razón de cambio, dh/dt</span>
-          <span class="hint">Sube rápido cuando el recipiente es angosto</span>
-        </div>
-        <svg id="rateChart" class="chart" viewBox="0 0 640 315"></svg>
-      </article>
-    </section>
-
-    <section class="bottom-grid">
-      <article class="panel">
-        <div class="panel-title">
-          <span>Lecturas para la libreta</span>
-          <span class="hint">Se agregan conforme avanza el tiempo</span>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Lectura</th>
-              <th>t</th>
-              <th>h(t)</th>
-              <th>dh/dt</th>
-            </tr>
-          </thead>
-          <tbody id="readingsBody"></tbody>
-        </table>
-      </article>
-
-      <article class="panel">
-        <div class="panel-title">
-          <span>Interpretación</span>
-        </div>
-        <p id="explanation" class="explanation"></p>
-
-        <div class="meter-wrap">
-          <div class="meter-label">
-            <span>Área transversal actual A(h)</span>
-            <span id="areaLabel">0%</span>
-          </div>
-          <div class="meter">
-            <div id="areaMeter" class="meter-fill"></div>
-          </div>
-        </div>
-
-        <div class="formula">
-          dh/dt = Q / A(h)
-        </div>
-      </article>
-    </section>
-  </main>
-
-  <script>
-    const vessels = {
-      barrilVerde: {
-        label: "Frasco verde con tres panzas",
-        hint: "Parecido al recipiente verde con zonas anchas y cuellos intermedios",
-        hMax: 18,
-        rMax: 4.15,
-        water: "#15b97a",
-        glassTint: "#50d69b",
-        cap: "mint",
-        explanation:
-          "Este recipiente tiene partes anchas y partes angostas. En las panzas el agua sube más lento porque el área es mayor. En las cinturas el agua sube más rápido.",
-        profile: [
-          [0.00, 0.58],
-          [0.03, 0.73],
-          [0.08, 0.90],
-          [0.15, 1.00],
-          [0.22, 0.95],
-          [0.28, 0.70],
-          [0.35, 0.82],
-          [0.45, 0.98],
-          [0.54, 1.00],
-          [0.62, 0.75],
-          [0.70, 0.86],
-          [0.80, 1.00],
-          [0.90, 0.96],
-          [0.97, 0.76],
-          [1.00, 0.68]
-        ],
-        ridges: [0.09, 0.17, 0.27, 0.33, 0.44, 0.56, 0.64, 0.77, 0.89]
-      },
-
-      cupcake: {
-        label: "Frasco tipo cupcake",
-        hint: "Base acanalada, cuerpo ancho y domo superior",
-        hMax: 20,
-        rMax: 5.15,
-        water: "#12a3b8",
-        glassTint: "#70e1ee",
-        cap: "silver",
-        explanation:
-          "En la parte baja el recipiente se ensancha. Luego tiene una zona muy ancha y finalmente se cierra hacia el cuello. Por eso la gráfica cambia mucho de pendiente.",
-        profile: [
-          [0.00, 0.50],
-          [0.05, 0.66],
-          [0.12, 0.78],
-          [0.25, 0.88],
-          [0.40, 0.98],
-          [0.52, 1.00],
-          [0.62, 0.92],
-          [0.72, 0.78],
-          [0.82, 0.64],
-          [0.91, 0.38],
-          [1.00, 0.34]
-        ],
-        ridges: [0.10, 0.15, 0.20, 0.25, 0.48, 0.55, 0.61, 0.69, 0.76]
-      },
-
-      gymWater: {
-        label: "Botella Gym Water",
-        hint: "Dos depósitos grandes unidos por una zona delgada",
-        hMax: 25,
-        rMax: 3.75,
-        water: "#ff2d91",
-        glassTint: "#ff9fd0",
-        cap: "sport",
-        explanation:
-          "Este es el mejor recipiente para notar la variación. En los depósitos grandes la altura sube lento. En la parte delgada central la altura sube muy rápido.",
-        profile: [
-          [0.00, 0.65],
-          [0.04, 0.86],
-          [0.10, 1.00],
-          [0.18, 0.98],
-          [0.25, 0.78],
-          [0.31, 0.42],
-          [0.38, 0.30],
-          [0.55, 0.30],
-          [0.63, 0.42],
-          [0.70, 0.78],
-          [0.78, 0.99],
-          [0.86, 1.00],
-          [0.92, 0.78],
-          [0.96, 0.42],
-          [1.00, 0.34]
-        ],
-        ridges: [0.08, 0.16, 0.24, 0.72, 0.82, 0.90]
-      },
-
-      vasoCilindrico: {
-        label: "Vaso cilíndrico 490 mL",
-        hint: "Casi constante: debe producir una gráfica casi lineal",
-        hMax: 14,
-        rMax: 3.35,
-        water: "#2595ff",
-        glassTint: "#d8f0ff",
-        cap: "none",
-        explanation:
-          "Como el vaso tiene casi el mismo ancho en toda su altura, el área transversal casi no cambia. Por eso la altura aumenta casi de forma lineal.",
-        profile: [
-          [0.00, 0.80],
-          [0.05, 0.88],
-          [0.15, 0.90],
-          [0.43, 0.90],
-          [0.48, 0.96],
-          [0.56, 0.96],
-          [0.86, 0.96],
-          [1.00, 0.96]
-        ],
-        ridges: [0.05, 0.12, 0.47]
-      },
-
-      vasoCerveza: {
-        label: "Vaso alto con cintura",
-        hint: "Base angosta, cintura central y abertura superior amplia",
-        hMax: 22,
-        rMax: 3.55,
-        water: "#28a7ff",
-        glassTint: "#e3f7ff",
-        cap: "none",
-        explanation:
-          "El vaso es más angosto en la parte baja y central, así que ahí el agua sube más rápido. En la parte superior se ensancha y la altura aumenta más lentamente.",
-        profile: [
-          [0.00, 0.46],
-          [0.05, 0.62],
-          [0.15, 0.58],
-          [0.30, 0.46],
-          [0.43, 0.42],
-          [0.58, 0.52],
-          [0.72, 0.72],
-          [0.88, 0.90],
-          [1.00, 0.91]
-        ],
-        ridges: [0.04, 0.10, 0.88, 0.98]
-      }
-    };
-
-    const state = {
-      vesselKey: "barrilVerde",
-      Q: 22,
-      speed: 1,
-      t: 0,
-      playing: false,
-      lastFrame: 0,
-      model: null
-    };
-
-    const vesselSvg = document.getElementById("vesselSvg");
-    const heightChart = document.getElementById("heightChart");
-    const rateChart = document.getElementById("rateChart");
-    const vesselSelect = document.getElementById("vesselSelect");
-    const flowInput = document.getElementById("flowInput");
-    const speedInput = document.getElementById("speedInput");
-    const playBtn = document.getElementById("playBtn");
-    const resetBtn = document.getElementById("resetBtn");
-
-    const statTime = document.getElementById("statTime");
-    const statHeight = document.getElementById("statHeight");
-    const statRate = document.getElementById("statRate");
-    const statVolume = document.getElementById("statVolume");
-    const shapeHint = document.getElementById("shapeHint");
-    const readingsBody = document.getElementById("readingsBody");
-    const explanation = document.getElementById("explanation");
-    const areaMeter = document.getElementById("areaMeter");
-    const areaLabel = document.getElementById("areaLabel");
-
-    for (const [key, vessel] of Object.entries(vessels)) {
-      const option = document.createElement("option");
-      option.value = key;
-      option.textContent = vessel.label;
-      vesselSelect.appendChild(option);
-    }
-
-    vesselSelect.value = state.vesselKey;
-
-    function radiusAt(vessel, normH) {
-      const p = vessel.profile;
-      const x = clamp(normH, 0, 1);
-
-      if (x <= p[0][0]) return p[0][1];
-      if (x >= p[p.length - 1][0]) return p[p.length - 1][1];
-
-      for (let i = 0; i < p.length - 1; i++) {
-        const [x0, r0] = p[i];
-        const [x1, r1] = p[i + 1];
-
-        if (x >= x0 && x <= x1) {
-          const u = (x - x0) / (x1 - x0);
-          const smooth = u * u * (3 - 2 * u);
-          return r0 + (r1 - r0) * smooth;
+import { useState, useEffect, useRef } from "react";
+import * as THREE from "three";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine, ResponsiveContainer } from "recharts";
+
+const barrilProf=(t,{r})=>r*.55+r*.45*Math.sin(Math.PI*t);
+const copaProf=(t,{r})=>{if(t<.25)return r*.8-(r*.8-r*.18)*(t/.25);if(t<.55)return r*.18;return r*.18+(r-r*.18)*((t-.55)/.45);};
+const numVolAt=(pf,dims,h)=>{const N=300,dh=h/N;let v=0;for(let i=0;i<N;i++){const y=(i+.5)*dh,ri=pf(y/dims.h,dims);v+=Math.PI*ri*ri*dh;}return v;};
+const numHAtV=(pf,dims,v)=>{let lo=0,hi=dims.h;for(let i=0;i<60;i++){const m=(lo+hi)/2;numVolAt(pf,dims,m)<v?lo=m:hi=m;}return(lo+hi)/2;};
+const interpCP=(cps,t)=>{
+  if(t<=cps[0][0])return cps[0][1];if(t>=cps[cps.length-1][0])return cps[cps.length-1][1];
+  for(let i=0;i<cps.length-1;i++){if(t>=cps[i][0]&&t<=cps[i+1][0]){const f=(t-cps[i][0])/(cps[i+1][0]-cps[i][0]);return cps[i][1]+f*(cps[i+1][1]-cps[i][1]);}}
+  return cps[cps.length-1][1];
+};
+const RCP={
+  r_barril:{H:10,cps:[[0,2.0],[0.05,5.0],[0.13,5.9],[0.21,5.0],[0.26,2.4],[0.33,5.4],[0.42,6.0],[0.50,5.4],[0.55,2.4],[0.61,5.1],[0.70,5.8],[0.78,5.1],[0.84,2.8],[0.90,2.4],[0.95,2.2],[1.0,2.1]]},
+  r_cupcake:{H:13,cps:[[0,3.0],[0.04,3.8],[0.15,4.2],[0.28,4.6],[0.37,4.9],[0.42,5.2],[0.48,5.4],[0.54,5.9],[0.58,5.9],[0.65,4.8],[0.74,3.5],[0.82,2.5],[0.89,1.8],[0.94,1.4],[1.0,1.1]]},
+  r_mancuerna:{H:25,cps:[[0,1.5],[0.04,3.5],[0.10,5.5],[0.17,5.9],[0.23,5.5],[0.28,3.8],[0.32,2.0],[0.37,1.4],[0.41,1.3],[0.45,1.3],[0.50,1.3],[0.55,1.4],[0.59,2.0],[0.64,3.8],[0.70,5.5],[0.77,5.9],[0.83,5.5],[0.88,3.5],[0.92,2.0],[0.95,1.5],[0.98,1.2],[1.0,0.8]]},
+  r_escalonado:{H:11,cps:[[0,3.2],[0.04,4.2],[0.30,4.2],[0.34,3.7],[0.38,4.8],[0.94,4.8],[1.0,5.0]]},
+  r_pilsner:{H:19,cps:[[0,1.1],[0.04,3.2],[0.08,2.6],[0.16,3.0],[0.35,3.8],[0.65,5.0],[0.87,5.6],[1.0,5.9]]}
+};
+const recVolAt=(key,h)=>{const{H,cps}=RCP[key],N=300,dh=h/N;let v=0;for(let i=0;i<N;i++){const y=(i+.5)*dh,r=interpCP(cps,y/H);v+=Math.PI*r*r*dh;}return v;};
+const recHAtV=(key,v)=>{const H=RCP[key].H;let lo=0,hi=H;for(let i=0;i<60;i++){const m=(lo+hi)/2;recVolAt(key,m)<v?lo=m:hi=m;}return(lo+hi)/2;};
+const recConstrictions=(key)=>{const{H,cps}=RCP[key];return cps.filter(([,r],i)=>i>0&&i<cps.length-1&&r<cps[i-1][1]&&r<cps[i+1][1]).map(([t])=>+(t*H).toFixed(2));};
+
+const FIGS={
+  cubo:{name:"Cubo",icon:"⬛",faces:6,edges:12,vertices:8,dims:[{key:"a",label:"Lado",unit:"cm",def:8}],vol:({a})=>a**3,formula:({a})=>`V = a³ = ${a}³ = ${(a**3).toFixed(1)} cm³`,hAtV:(v,{a})=>v/(a*a),maxH:({a})=>+a,shape:"rect"},
+  prisma:{name:"Prisma",icon:"📦",faces:6,edges:12,vertices:8,dims:[{key:"l",label:"Largo",unit:"cm",def:10},{key:"w",label:"Ancho",unit:"cm",def:6},{key:"h",label:"Alto",unit:"cm",def:8}],vol:({l,w,h})=>l*w*h,formula:({l,w,h})=>`V = ${l}×${w}×${h} = ${(l*w*h).toFixed(1)} cm³`,hAtV:(v,{l,w})=>v/(l*w),maxH:({h})=>+h,shape:"rect"},
+  cilindro:{name:"Cilindro",icon:"🥫",faces:3,edges:2,vertices:0,dims:[{key:"r",label:"Radio",unit:"cm",def:4},{key:"h",label:"Alto",unit:"cm",def:10}],vol:({r,h})=>Math.PI*r**2*h,formula:({r,h})=>`V = π·${r}²·${h} = ${(Math.PI*r**2*h).toFixed(1)} cm³`,hAtV:(v,{r})=>v/(Math.PI*r**2),maxH:({h})=>+h,shape:"cyl"},
+  cono:{name:"Cono",icon:"🍦",faces:2,edges:1,vertices:1,dims:[{key:"r",label:"Radio",unit:"cm",def:4},{key:"h",label:"Alto",unit:"cm",def:10}],vol:({r,h})=>(1/3)*Math.PI*r**2*h,formula:({r,h})=>`V = ⅓π·${r}²·${h} = ${((1/3)*Math.PI*r**2*h).toFixed(1)} cm³`,hAtV:(v,{r,h})=>h*(1-Math.cbrt(Math.max(0,1-3*v/(Math.PI*r**2*h)))),maxH:({h})=>+h,shape:"cone"},
+  esfera:{name:"Esfera",icon:"🌐",faces:1,edges:0,vertices:0,dims:[{key:"r",label:"Radio",unit:"cm",def:5}],vol:({r})=>(4/3)*Math.PI*r**3,formula:({r})=>`V = (4/3)π·${r}³ = ${((4/3)*Math.PI*r**3).toFixed(1)} cm³`,hAtV:(v,{r})=>{let lo=0,hi=2*r;for(let i=0;i<60;i++){const m=(lo+hi)/2;Math.PI*m**2*(r-m/3)<v?lo=m:hi=m;}return(lo+hi)/2;},maxH:({r})=>2*+r,shape:"sphere"},
+  piramide:{name:"Pirámide",icon:"🔺",faces:5,edges:8,vertices:5,dims:[{key:"b",label:"Base",unit:"cm",def:8},{key:"h",label:"Alto",unit:"cm",def:10}],vol:({b,h})=>(1/3)*b**2*h,formula:({b,h})=>`V = ⅓·${b}²·${h} = ${((1/3)*b**2*h).toFixed(1)} cm³`,hAtV:(v,{b,h})=>h*(1-Math.cbrt(Math.max(0,1-3*v/(b**2*h)))),maxH:({h})=>+h,shape:"pyr"},
+  barril:{name:"Barril",icon:"🛢️",faces:3,edges:2,vertices:0,dims:[{key:"r",label:"Radio máx",unit:"cm",def:5},{key:"h",label:"Alto",unit:"cm",def:10}],vol:(d)=>numVolAt(barrilProf,d,d.h),formula:(d)=>`V ≈ ${numVolAt(barrilProf,d,d.h).toFixed(1)} cm³`,hAtV:(v,d)=>numHAtV(barrilProf,d,v),maxH:({h})=>+h,shape:"lathe",profile:barrilProf,hint:"Panza ancha → sube lento al centro, rápido en extremos"},
+  copa:{name:"Copa",icon:"🏆",faces:3,edges:2,vertices:0,dims:[{key:"r",label:"Radio copa",unit:"cm",def:5},{key:"h",label:"Alto",unit:"cm",def:12}],vol:(d)=>numVolAt(copaProf,d,d.h),formula:(d)=>`V ≈ ${numVolAt(copaProf,d,d.h).toFixed(1)} cm³`,hAtV:(v,d)=>numHAtV(copaProf,d,v),maxH:({h})=>+h,shape:"lathe",profile:copaProf,hint:"Tallo angosto → altura se dispara al pasar por él"},
+  r_barril:{name:"Vaso Barril",icon:"🫙",isRec:true,ml:458,dims:[],vol:()=>recVolAt('r_barril',RCP.r_barril.H),formula:()=>`V ≈ ${recVolAt('r_barril',RCP.r_barril.H).toFixed(0)} ml`,hAtV:(v)=>recHAtV('r_barril',v),maxH:()=>RCP.r_barril.H,shape:"lathe",profile:(t)=>interpCP(RCP.r_barril.cps,t),desc:"3 burbujas muy anchas con constricciones pronunciadas y boca casi plana",hint:"Oscila 3 veces: rápido (constricción) → lento (burbuja) → rápido..."},
+  r_cupcake:{name:"Vaso Cupcake",icon:"🧁",isRec:true,ml:500,dims:[],vol:()=>recVolAt('r_cupcake',RCP.r_cupcake.H),formula:()=>`V ≈ ${recVolAt('r_cupcake',RCP.r_cupcake.H).toFixed(0)} ml`,hAtV:(v)=>recHAtV('r_cupcake',v),maxH:()=>RCP.r_cupcake.H,shape:"lathe",profile:(t)=>interpCP(RCP.r_cupcake.cps,t),desc:"Molde que se abre gradualmente → pan ancho → cúpula → cuello muy angosto",hint:"Línea decreciente (molde) → suave (cúpula) → casi vertical (cuello)"},
+  r_mancuerna:{name:"Botella Mancuerna",icon:"🏋️",isRec:true,ml:1000,dims:[],vol:()=>recVolAt('r_mancuerna',RCP.r_mancuerna.H),formula:()=>`V ≈ ${recVolAt('r_mancuerna',RCP.r_mancuerna.H).toFixed(0)} ml`,hAtV:(v)=>recHAtV('r_mancuerna',v),maxH:()=>RCP.r_mancuerna.H,shape:"lathe",profile:(t)=>interpCP(RCP.r_mancuerna.cps,t),desc:"Dos esferas iguales arriba y abajo, tubo muy angosto en el centro",hint:"Dos S-curves simétricas separadas por dos picos casi verticales"},
+  r_escalonado:{name:"Vaso Escalonado",icon:"🥃",isRec:true,ml:490,dims:[],vol:()=>recVolAt('r_escalonado',RCP.r_escalonado.H),formula:()=>`V ≈ ${recVolAt('r_escalonado',RCP.r_escalonado.H).toFixed(0)} ml`,hAtV:(v)=>recHAtV('r_escalonado',v),maxH:()=>RCP.r_escalonado.H,shape:"lathe",profile:(t)=>interpCP(RCP.r_escalonado.cps,t),desc:"Cilindro inferior + escalón → cilindro superior más ancho",hint:"Dos tramos casi rectos con un pequeño salto de pendiente"},
+  r_pilsner:{name:"Copa Pilsner",icon:"🍺",isRec:true,ml:500,dims:[],vol:()=>recVolAt('r_pilsner',RCP.r_pilsner.H),formula:()=>`V ≈ ${recVolAt('r_pilsner',RCP.r_pilsner.H).toFixed(0)} ml`,hAtV:(v)=>recHAtV('r_pilsner',v),maxH:()=>RCP.r_pilsner.H,shape:"lathe",profile:(t)=>interpCP(RCP.r_pilsner.cps,t),desc:"Pie muy estrecho, cuerpo troncocónico creciente",hint:"Empieza muy empinada y se aplana cada vez más al subir"}
+};
+
+const QUESTIONS={
+  cubo:["¿Qué pasa con el volumen si duplicas el lado?","¿Por qué la gráfica es siempre una línea recta?","¿Cuántos cubos de lado 4 caben en uno de lado 8?"],
+  prisma:["¿Qué dimensión afecta más el volumen?","¿Por qué la gráfica es recta aunque no sea cubo?","¿Cómo cambiaría si la base fuera cuadrada?"],
+  cilindro:["Si doblas el radio, ¿cuánto se multiplica el volumen?","¿Por qué la gráfica es igual de recta que el cubo?","Compara con el prisma: ¿cuál contiene más volumen?"],
+  cono:["¿Por qué el agua sube cada vez más rápido?","Compara con el cilindro igual. ¿Cuánto es su volumen?","¿En qué altura la gráfica tiene mayor pendiente?"],
+  esfera:["¿Por qué la gráfica tiene forma de S?","¿Dónde sube más lento el agua y por qué?","¿A qué altura la sección transversal es máxima?"],
+  piramide:["¿La gráfica se parece a la del cono?","¿Cuánto equivale su volumen al del prisma base?","¿Cómo cambia si la base es muy grande y el alto pequeño?"],
+  barril:["¿En qué parte sube el agua más lento?","Describe las tres fases de la gráfica.","¿Cómo se relaciona la forma con la pendiente?"],
+  copa:["¿Cuándo la gráfica se vuelve casi vertical?","¿Por qué sube tan rápido en un momento?","¿Podrías estimar el volumen del tallo mirando la gráfica?"],
+  r_barril:["¿Cuántos cambios de velocidad ves en la gráfica? ¿A qué partes corresponden?","¿Por qué la gráfica alterna rápido-lento-rápido?","¿Tu predicción coincidió con la realidad? ¿Qué te sorprendió?"],
+  r_cupcake:["¿En qué parte de la gráfica se nota que la base se va abriendo gradualmente?","¿Por qué al llegar al cuello la gráfica se vuelve casi vertical?","¿Tu predicción capturó bien el cambio de pendiente en el cuello?"],
+  r_mancuerna:["¿Puedes identificar las 5 fases de la gráfica? (esfera1↑, tubo, esfera1↓, tubo, esfera2)","Las dos esferas son iguales, ¿las dos partes de la gráfica se ven iguales?","¿Tu predicción capturó los dos 'saltos' verticales del tubo?"],
+  r_escalonado:["¿En qué segundo aproximado ocurre el escalón en la gráfica?","¿Por qué hay exactamente dos pendientes distintas?","¿Tu predicción identificó correctamente el escalón?"],
+  r_pilsner:["¿Cómo se compara esta gráfica con la de un cono?","¿Por qué la curva se aplana cada vez más conforme sube?","¿Tu predicción fue una curva o una recta? ¿Por qué?"]
+};
+
+const getVD=(fk,dims)=>{const vd={};(FIGS[fk].dims||[]).forEach(d=>{vd[d.key]=Math.max(parseFloat(dims[d.key])||1,.5);});return vd;};
+const makeGeo=(fk,dims)=>{
+  const fig=FIGS[fk],vd=getVD(fk,dims),mH=fig.maxH(vd),S=10/mH;
+  switch(fig.shape){
+    case"rect":{const h=mH*S,l=(vd.l||vd.a)*S,w=(vd.w||vd.a)*S;return{geo:new THREE.BoxGeometry(l,h,w),mHS:h};}
+    case"cyl":{const r=vd.r*S,h=mH*S;return{geo:new THREE.CylinderGeometry(r,r,h,48),mHS:h};}
+    case"cone":{const r=vd.r*S,h=mH*S;return{geo:new THREE.CylinderGeometry(0,r,h,48),mHS:h};}
+    case"sphere":{const r=vd.r*S;return{geo:new THREE.SphereGeometry(r,48,48),mHS:2*r};}
+    case"pyr":{const cr=vd.b*S*Math.SQRT2/2,h=mH*S;return{geo:new THREE.ConeGeometry(cr,h,4),mHS:h};}
+    case"lathe":{const H=mH*S,pf=fig.profile,pp=[];for(let i=0;i<=64;i++){const t=i/64;pp.push(new THREE.Vector2(Math.max(pf(t,vd)*S,.05),t*H-H/2));}return{geo:new THREE.LatheGeometry(pp,48),mHS:H};}
+    default:return{geo:new THREE.BoxGeometry(10,10,10),mHS:10};
+  }
+};
+
+function buildScene(fk,dims,wc,st){
+  if(st.group){st.group.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material)o.material.dispose();});st.scene.remove(st.group);}
+  const{geo,mHS}=makeGeo(fk,dims);st.mHS=mHS;
+  geo.computeBoundingSphere();
+  const outerR=Math.max(geo.boundingSphere?.radius||mHS*.55,mHS*.55);
+  const cp=new THREE.Plane(new THREE.Vector3(0,-1,0),-mHS/2);st.cp=cp;
+  const g=new THREE.Group();g.rotation.x=st.rot.x;g.rotation.y=st.rot.y;
+  const sh=FIGS[fk].shape;
+
+  // 1. Agua (cara interna) — renderizar primero para profundidad
+  const waterBack=new THREE.Mesh(geo.clone(),new THREE.MeshPhongMaterial({
+    color:wc,shininess:60,transparent:true,opacity:.65,clippingPlanes:[cp],side:THREE.BackSide,depthWrite:false,renderOrder:1
+  }));
+  g.add(waterBack);
+
+  // 2. Shell exterior (vidrio/cristal)
+  g.add(new THREE.Mesh(geo,new THREE.MeshPhongMaterial({
+    color:0xbfdbfe,specular:0xffffff,shininess:80,transparent:true,opacity:.12,side:THREE.FrontSide,depthWrite:false,renderOrder:2
+  })));
+  g.add(new THREE.Mesh(geo.clone(),new THREE.MeshPhongMaterial({
+    color:0xdbeafe,transparent:true,opacity:.06,side:THREE.BackSide,depthWrite:false,renderOrder:2
+  })));
+
+  // 3. Estructura (aristas o perfiles)
+  if(sh==='rect'||sh==='pyr'){
+    g.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:0x1e40af})));
+  }else if(sh==='cyl'||sh==='cone'){
+    const vd=getVD(fk,dims),S=10/FIGS[fk].maxH(vd),rBot=(vd.r||0)*S,rTop=sh==='cone'?0:rBot;
+    const mkRing=(r,y)=>{const pts=[];for(let i=0;i<=48;i++){const a=i/48*Math.PI*2;pts.push(new THREE.Vector3(Math.cos(a)*r,y,Math.sin(a)*r));}return new THREE.BufferGeometry().setFromPoints(pts);};
+    if(rTop>0)g.add(new THREE.Line(mkRing(rTop,mHS/2),new THREE.LineBasicMaterial({color:0x1e40af})));
+    g.add(new THREE.Line(mkRing(rBot,-mHS/2),new THREE.LineBasicMaterial({color:0x1e40af})));
+    const nL=sh==='cone'?1:4;
+    for(let i=0;i<nL;i++){const a=i/nL*Math.PI*2;const vg=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(Math.cos(a)*rTop,mHS/2,Math.sin(a)*rTop),new THREE.Vector3(Math.cos(a)*rBot,-mHS/2,Math.sin(a)*rBot)]);g.add(new THREE.Line(vg,new THREE.LineBasicMaterial({color:0x1e40af})));}
+  }else if(sh==='sphere'){
+    const vd=getVD(fk,dims),r=vd.r*(10/(2*vd.r));
+    [0,.5,-.5].forEach(yf=>{const yr=yf*mHS*.8,cr=Math.sqrt(Math.max(0,r*r-yr*yr));const pts=[];for(let i=0;i<=48;i++){const a=i/48*Math.PI*2;pts.push(new THREE.Vector3(Math.cos(a)*cr,yr,Math.sin(a)*cr));}g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:0x1e40af,transparent:true,opacity:.5})));});
+  }else if(sh==='lathe'){
+    g.add(new THREE.Mesh(geo.clone(),new THREE.MeshBasicMaterial({color:0x1e40af,wireframe:true,transparent:true,opacity:.04})));
+    const vd2=getVD(fk,dims),S2=10/FIGS[fk].maxH(vd2),pf=FIGS[fk].profile;
+    [0,1].forEach(t=>{const r=pf(t,vd2)*S2;const pts=[];for(let i=0;i<=48;i++){const a=i/48*Math.PI*2;pts.push(new THREE.Vector3(Math.cos(a)*r,t*mHS-mHS/2,Math.sin(a)*r));}g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:0x1e40af})));});
+    for(let i=0;i<4;i++){const a=i/4*Math.PI*2;const pts2=[];for(let j=0;j<=32;j++){const t=j/32,r=pf(t,vd2)*S2;pts2.push(new THREE.Vector3(Math.cos(a)*r,t*mHS-mHS/2,Math.sin(a)*r));}g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts2),new THREE.LineBasicMaterial({color:0x1e40af,transparent:true,opacity:.6})));}
+  }
+
+  // 4. Agua cara frontal (principal)
+  g.add(new THREE.Mesh(geo.clone(),new THREE.MeshPhongMaterial({
+    color:wc,specular:0x93c5fd,shininess:120,transparent:true,opacity:.90,clippingPlanes:[cp],side:THREE.FrontSide,depthWrite:false,renderOrder:3
+  })));
+
+  // 5. Superficie del agua (disco)
+  const cap=new THREE.Mesh(new THREE.CircleGeometry(1,48),new THREE.MeshPhongMaterial({
+    color:0xbfdbfe,specular:0xffffff,shininess:200,transparent:true,opacity:.95,side:THREE.DoubleSide,depthWrite:false,renderOrder:4
+  }));
+  cap.rotation.x=-Math.PI/2;cap.visible=false;g.add(cap);
+  st.cap=cap;st.capShape=sh;st.capVd=getVD(fk,dims);st.capS=10/FIGS[fk].maxH(st.capVd);st.capFig=FIGS[fk];
+
+  // 6. Regla y guia de nivel: hacen visible el cambio de altura en el 3D.
+  const rulerX=outerR*.72, rulerZ=outerR*.72;
+  const rulerMat=new THREE.LineBasicMaterial({color:0x0f172a,transparent:true,opacity:.38});
+  const tickMat=new THREE.LineBasicMaterial({color:0x2563eb,transparent:true,opacity:.34});
+  g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(rulerX,-mHS/2,rulerZ),
+    new THREE.Vector3(rulerX,mHS/2,rulerZ)
+  ]),rulerMat));
+  for(let i=0;i<=4;i++){
+    const y=-mHS/2+i*mHS/4, len=(i===0||i===4)?.75:.45;
+    g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(rulerX-len,y,rulerZ),
+      new THREE.Vector3(rulerX+len,y,rulerZ)
+    ]),tickMat));
+  }
+  const levelGuide=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(-outerR*.64,0,rulerZ),
+    new THREE.Vector3(outerR*.82,0,rulerZ)
+  ]),new THREE.LineBasicMaterial({color:wc,transparent:true,opacity:.8}));
+  levelGuide.position.y=-mHS/2;
+  levelGuide.renderOrder=5;g.add(levelGuide);st.levelGuide=levelGuide;st.levelGuideR=outerR;
+
+  st.group=g;st.scene.add(g);st.cam.position.z=mHS*3.0;st.cam.updateProjectionMatrix();
+}
+
+function capRadius(sh,vd,S,y,mHS,fig){
+  const hF=Math.min(Math.max((y+mHS/2)/mHS,0),1);
+  switch(sh){
+    case'rect':return null;case'cyl':return vd.r*S;
+    case'cone':return vd.r*S*(1-hF);case'sphere':{const r=vd.r*S;return Math.sqrt(Math.max(0,r*r-y*y));}
+    case'pyr':return vd.b*S*Math.SQRT2/2*(1-hF);
+    case'lathe':return fig?.profile?Math.max(fig.profile(hF,vd)*S,.01):null;
+    default:return null;
+  }
+}
+
+function Fig3D({fk,dims,fillPct,wc=0x3b82f6}){
+  const cRef=useRef();
+  const stRef=useRef({renderer:null,scene:null,cam:null,group:null,cp:null,cap:null,mHS:10,rot:{x:.38,y:.6},drag:{on:false,lx:0,ly:0}});
+  const fpRef=useRef(fillPct);fpRef.current=fillPct;
+  useEffect(()=>{
+    const R=new THREE.WebGLRenderer({canvas:cRef.current,antialias:true,alpha:true});
+    R.setSize(200,200,false);R.localClippingEnabled=true;
+    const sc=new THREE.Scene(),cam=new THREE.PerspectiveCamera(42,1,.1,500);cam.position.z=28;
+    sc.add(new THREE.AmbientLight(0xffffff,.75));
+    const dl1=new THREE.DirectionalLight(0xffffff,.7);dl1.position.set(5,10,8);sc.add(dl1);
+    const dl2=new THREE.DirectionalLight(0xffffff,.3);dl2.position.set(-5,-4,-6);sc.add(dl2);
+    const st=stRef.current;st.renderer=R;st.scene=sc;st.cam=cam;
+    let raf;
+    const tick=()=>{
+      raf=requestAnimationFrame(tick);const fp=fpRef.current,s=stRef.current;
+      if(s.group){s.group.rotation.x=s.rot.x;s.group.rotation.y=s.rot.y;}
+      if(s.cp){
+        const wY=fp*s.mHS-s.mHS/2;s.cp.constant=wY;
+        if(s.levelGuide){
+          s.levelGuide.position.y=wY;
+        }
+        if(s.cap){
+          if(fp>.005){const r=capRadius(s.capShape,s.capVd,s.capS,wY,s.mHS,s.capFig);if(r&&r>.05){s.cap.scale.set(r,r,r);s.cap.position.y=wY;s.cap.visible=true;}else s.cap.visible=false;}
+          else s.cap.visible=false;
         }
       }
-
-      return p[p.length - 1][1];
-    }
-
-    function areaAtHeight(vessel, h) {
-      const norm = clamp(h / vessel.hMax, 0, 1);
-      const r = vessel.rMax * radiusAt(vessel, norm);
-      return Math.PI * r * r;
-    }
-
-    function buildModel(vessel, Q) {
-      const steps = 1100;
-      const samples = [];
-      let volume = 0;
-      let previousArea = areaAtHeight(vessel, 0);
-
-      samples.push({
-        h: 0,
-        v: 0,
-        area: previousArea
-      });
-
-      for (let i = 1; i <= steps; i++) {
-        const h = vessel.hMax * i / steps;
-        const area = areaAtHeight(vessel, h);
-        const dh = vessel.hMax / steps;
-
-        volume += 0.5 * (previousArea + area) * dh;
-
-        samples.push({
-          h,
-          v: volume,
-          area
-        });
-
-        previousArea = area;
-      }
-
-      for (const s of samples) {
-        s.t = s.v / Q;
-        s.rate = Q / s.area;
-      }
-
-      const maxArea = Math.max(...samples.map(s => s.area));
-      const minArea = Math.min(...samples.map(s => s.area));
-      const maxRate = Math.max(...samples.map(s => s.rate));
-      const totalVolume = samples[samples.length - 1].v;
-      const tFinal = totalVolume / Q;
-
-      return {
-        samples,
-        totalVolume,
-        tFinal,
-        maxRate,
-        maxArea,
-        minArea
-      };
-    }
-
-    function stateAtTime(t) {
-      const vessel = vessels[state.vesselKey];
-      const model = state.model;
-      const clampedT = clamp(t, 0, model.tFinal);
-      const targetVolume = clampedT * state.Q;
-
-      if (targetVolume <= 0) {
-        const area = areaAtHeight(vessel, 0);
-        return {
-          t: 0,
-          h: 0,
-          v: 0,
-          area,
-          rate: state.Q / area
-        };
-      }
-
-      if (targetVolume >= model.totalVolume) {
-        const area = areaAtHeight(vessel, vessel.hMax);
-        return {
-          t: model.tFinal,
-          h: vessel.hMax,
-          v: model.totalVolume,
-          area,
-          rate: state.Q / area
-        };
-      }
-
-      let lo = 0;
-      let hi = model.samples.length - 1;
-
-      while (lo < hi) {
-        const mid = Math.floor((lo + hi) / 2);
-        if (model.samples[mid].v < targetVolume) lo = mid + 1;
-        else hi = mid;
-      }
-
-      const b = model.samples[lo];
-      const a = model.samples[lo - 1];
-      const u = (targetVolume - a.v) / (b.v - a.v);
-      const h = a.h + (b.h - a.h) * u;
-      const area = areaAtHeight(vessel, h);
-
-      return {
-        t: clampedT,
-        h,
-        v: targetVolume,
-        area,
-        rate: state.Q / area
-      };
-    }
-
-    function render() {
-      const vessel = vessels[state.vesselKey];
-      const current = stateAtTime(state.t);
-
-      shapeHint.textContent = vessel.hint;
-      explanation.textContent = vessel.explanation;
-
-      statTime.textContent = `${current.t.toFixed(1)} s`;
-      statHeight.textContent = `${current.h.toFixed(1)} cm`;
-      statRate.textContent = `${current.rate.toFixed(2)} cm/s`;
-      statVolume.textContent = `${current.v.toFixed(0)} mL`;
-
-      const areaPercent = 100 * current.area / state.model.maxArea;
-      areaMeter.style.width = `${areaPercent.toFixed(1)}%`;
-      areaLabel.textContent = `${areaPercent.toFixed(0)}%`;
-
-      drawVessel(vessel, current);
-      drawHeightChart(vessel, current);
-      drawRateChart(vessel, current);
-      drawReadings(current);
-    }
-
-    function drawVessel(vessel, current) {
-      const W = 360;
-      const H = 560;
-      const cx = 178;
-      const topY = 54;
-      const bottomY = 510;
-      const bodyH = bottomY - topY;
-      const maxW = 104;
-      const steps = 90;
-      const levelNorm = clamp(current.h / vessel.hMax, 0, 1);
-      const surfaceY = yFromNorm(levelNorm);
-      const surfaceR = maxW * radiusAt(vessel, levelNorm);
-
-      function yFromNorm(n) {
-        return topY + (1 - n) * bodyH;
-      }
-
-      function xRight(n) {
-        return cx + maxW * radiusAt(vessel, n);
-      }
-
-      function xLeft(n) {
-        return cx - maxW * radiusAt(vessel, n);
-      }
-
-      const right = [];
-      const left = [];
-
-      for (let i = 0; i <= steps; i++) {
-        const n = i / steps;
-        right.push([xRight(n), yFromNorm(n)]);
-      }
-
-      for (let i = steps; i >= 0; i--) {
-        const n = i / steps;
-        left.push([xLeft(n), yFromNorm(n)]);
-      }
-
-      const path = "M " + [...right, ...left].map(p => `${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(" L ") + " Z";
-
-      const tickStep = niceStep(vessel.hMax / 7);
-      const ticks = [];
-      for (let h = 0; h <= vessel.hMax + 0.0001; h += tickStep) {
-        const n = h / vessel.hMax;
-        const y = yFromNorm(n);
-        ticks.push(`
-          <line class="ruler-tick" x1="38" y1="${y}" x2="54" y2="${y}" />
-          <text class="ruler-text" x="31" y="${y + 4}" text-anchor="end">${formatTick(h)} cm</text>
-        `);
-      }
-
-      const ridges = vessel.ridges.map((n, i) => {
-        const y = yFromNorm(n);
-        const r = maxW * radiusAt(vessel, n) * 0.92;
-        const amp = i % 2 === 0 ? 7 : -6;
-
-        return `
-          <path class="ridge" d="M ${cx - r} ${y} C ${cx - r * 0.45} ${y + amp}, ${cx + r * 0.45} ${y - amp}, ${cx + r} ${y}" />
-          <path class="ridge-light" d="M ${cx - r * 0.88} ${y - 4} C ${cx - r * 0.25} ${y - 10}, ${cx + r * 0.28} ${y + 2}, ${cx + r * 0.88} ${y - 4}" />
-        `;
-      }).join("");
-
-      const fillHeight = bottomY - surfaceY;
-
-      vesselSvg.innerHTML = `
-        <defs>
-          <clipPath id="vesselClip">
-            <path d="${path}"></path>
-          </clipPath>
-
-          <linearGradient id="waterGradient" x1="0" x2="1" y1="0" y2="1">
-            <stop offset="0%" stop-color="#bfefff" stop-opacity="0.92" />
-            <stop offset="45%" stop-color="${vessel.water}" stop-opacity="0.58" />
-            <stop offset="100%" stop-color="${vessel.water}" stop-opacity="0.86" />
-          </linearGradient>
-
-          <linearGradient id="glassGradient" x1="0" x2="1" y1="0" y2="1">
-            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.82" />
-            <stop offset="50%" stop-color="${vessel.glassTint}" stop-opacity="0.18" />
-            <stop offset="100%" stop-color="#ffffff" stop-opacity="0.45" />
-          </linearGradient>
-        </defs>
-
-        <rect x="0" y="0" width="${W}" height="${H}" fill="transparent"></rect>
-
-        <line class="ruler-line" x1="54" y1="${topY}" x2="54" y2="${bottomY}" />
-        ${ticks.join("")}
-        <text class="small-label" x="54" y="535" text-anchor="middle">altura</text>
-
-        <path d="${path}" fill="url(#glassGradient)" stroke="none" opacity="0.75"></path>
-
-        <rect
-          clip-path="url(#vesselClip)"
-          x="0"
-          y="${surfaceY}"
-          width="${W}"
-          height="${fillHeight}"
-          fill="url(#waterGradient)"
-        />
-
-        <path d="${path}" class="glass-outline"></path>
-
-        ${ridges}
-
-        <path class="glass-highlight" d="M ${cx - 42} ${topY + 42} C ${cx - 76} ${topY + 148}, ${cx - 56} ${bottomY - 150}, ${cx - 30} ${bottomY - 58}" />
-        <path class="glass-highlight" d="M ${cx + 48} ${topY + 66} C ${cx + 78} ${topY + 170}, ${cx + 56} ${bottomY - 130}, ${cx + 32} ${bottomY - 62}" opacity="0.45" />
-
-        <line
-          class="water-surface"
-          x1="${cx - surfaceR + 4}"
-          y1="${surfaceY}"
-          x2="${cx + surfaceR - 4}"
-          y2="${surfaceY}"
-        />
-
-        <line
-          x1="${cx + surfaceR + 10}"
-          y1="${surfaceY}"
-          x2="330"
-          y2="${surfaceY}"
-          stroke="#0756c8"
-          stroke-width="2"
-          stroke-dasharray="6 6"
-          opacity="0.75"
-        />
-
-        <circle cx="330" cy="${surfaceY}" r="5" fill="#ff8a00" />
-        <text class="svg-label" x="330" y="${surfaceY - 12}" text-anchor="middle">${current.h.toFixed(1)} cm</text>
-
-        ${drawCap(vessel, cx, topY, maxW)}
-      `;
-    }
-
-    function drawCap(vessel, cx, topY, maxW) {
-      const topRadius = maxW * radiusAt(vessel, 1);
-
-      if (vessel.cap === "mint") {
-        return `
-          <rect x="${cx - topRadius - 20}" y="${topY - 30}" width="${2 * topRadius + 40}" height="30" rx="15"
-            fill="#a7e5b8" stroke="rgba(15,23,42,0.35)" stroke-width="2" />
-          <ellipse cx="${cx}" cy="${topY - 2}" rx="${topRadius + 19}" ry="10"
-            fill="rgba(255,255,255,0.35)" stroke="rgba(15,23,42,0.25)" />
-        `;
-      }
-
-      if (vessel.cap === "silver") {
-        return `
-          <rect x="${cx - 39}" y="${topY - 44}" width="78" height="45" rx="7"
-            fill="#cbd5e1" stroke="#64748b" stroke-width="2" />
-          <path d="M ${cx - 34} ${topY - 35} l8 12 l8 -12 l8 12 l8 -12 l8 12 l8 -12 l8 12"
-            fill="none" stroke="#64748b" stroke-width="2" />
-        `;
-      }
-
-      if (vessel.cap === "sport") {
-        return `
-          <rect x="${cx - 26}" y="${topY - 54}" width="52" height="54" rx="12"
-            fill="#dbeafe" stroke="#64748b" stroke-width="2" />
-          <rect x="${cx - 16}" y="${topY - 76}" width="32" height="28" rx="10"
-            fill="#93c5fd" stroke="#64748b" stroke-width="2" />
-          <line x1="${cx - 20}" y1="${topY - 34}" x2="${cx + 20}" y2="${topY - 34}"
-            stroke="#64748b" stroke-width="2" />
-        `;
-      }
-
-      return "";
-    }
-
-    function drawHeightChart(vessel, current) {
-      drawChart({
-        svg: heightChart,
-        title: "h(t)",
-        yLabel: "Altura, cm",
-        yMax: vessel.hMax,
-        color: "#1677ff",
-        futureColor: "rgba(22,119,255,0.18)",
-        getY: d => d.h,
-        currentY: current.h,
-        current,
-        formatter: v => `${v.toFixed(1)}`
-      });
-    }
-
-    function drawRateChart(vessel, current) {
-      drawChart({
-        svg: rateChart,
-        title: "dh/dt",
-        yLabel: "cm/s",
-        yMax: state.model.maxRate * 1.12,
-        color: "#ff8a00",
-        futureColor: "rgba(255,138,0,0.2)",
-        getY: d => d.rate,
-        currentY: current.rate,
-        current,
-        formatter: v => `${v.toFixed(2)}`
-      });
-    }
-
-    function drawChart(config) {
-      const W = 640;
-      const H = 315;
-      const margin = { left: 68, right: 26, top: 26, bottom: 48 };
-      const plotW = W - margin.left - margin.right;
-      const plotH = H - margin.top - margin.bottom;
-
-      const xMax = state.model.tFinal;
-      const yMax = config.yMax;
-      const data = state.model.samples;
-      const visible = data.filter(d => d.t <= state.t);
-
-      if (visible.length === 0 || visible[visible.length - 1].t < config.current.t) {
-        visible.push({
-          t: config.current.t,
-          h: config.current.h,
-          rate: config.current.rate
-        });
-      }
-
-      const x = t => margin.left + plotW * t / xMax;
-      const y = value => margin.top + plotH * (1 - value / yMax);
-
-      const xTicks = makeTicks(xMax, 6);
-      const yTicks = makeTicks(yMax, 5);
-
-      const grid = [
-        ...xTicks.map(t => `
-          <line x1="${x(t)}" y1="${margin.top}" x2="${x(t)}" y2="${margin.top + plotH}"
-            stroke="#dbe3ef" stroke-width="1" />
-          <text x="${x(t)}" y="${H - 18}" text-anchor="middle" font-size="12" fill="#475569" font-weight="700">
-            ${formatTick(t)}
-          </text>
-        `),
-        ...yTicks.map(v => `
-          <line x1="${margin.left}" y1="${y(v)}" x2="${margin.left + plotW}" y2="${y(v)}"
-            stroke="#dbe3ef" stroke-width="1" />
-          <text x="${margin.left - 10}" y="${y(v) + 4}" text-anchor="end" font-size="12" fill="#475569" font-weight="700">
-            ${config.formatter(v)}
-          </text>
-        `)
-      ].join("");
-
-      const futurePath = makePath(data, x, y, config.getY);
-      const visiblePath = makePath(visible, x, y, config.getY);
-
-      const cx = x(config.current.t);
-      const cy = y(config.currentY);
-
-      config.svg.innerHTML = `
-        <rect x="0" y="0" width="${W}" height="${H}" rx="18" fill="#ffffff" />
-
-        ${grid}
-
-        <line x1="${margin.left}" y1="${margin.top + plotH}" x2="${margin.left + plotW}" y2="${margin.top + plotH}"
-          stroke="#334155" stroke-width="2" />
-        <line x1="${margin.left}" y1="${margin.top}" x2="${margin.left}" y2="${margin.top + plotH}"
-          stroke="#334155" stroke-width="2" />
-
-        <path d="${futurePath}" fill="none" stroke="${config.futureColor}" stroke-width="5" stroke-linecap="round" />
-        <path d="${visiblePath}" fill="none" stroke="${config.color}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
-
-        <line x1="${cx}" y1="${margin.top}" x2="${cx}" y2="${margin.top + plotH}"
-          stroke="#94a3b8" stroke-width="2" stroke-dasharray="5 6" />
-
-        <line x1="${margin.left}" y1="${cy}" x2="${margin.left + plotW}" y2="${cy}"
-          stroke="#94a3b8" stroke-width="2" stroke-dasharray="5 6" />
-
-        <circle cx="${cx}" cy="${cy}" r="8" fill="#ff8a00" stroke="#ffffff" stroke-width="4" />
-
-        <rect x="${Math.min(cx + 12, W - 172)}" y="${Math.max(cy - 38, 12)}" width="156" height="30" rx="12"
-          fill="#0f172a" opacity="0.92" />
-        <text x="${Math.min(cx + 90, W - 94)}" y="${Math.max(cy - 18, 32)}" text-anchor="middle"
-          font-size="13" fill="#ffffff" font-weight="900">
-          t=${config.current.t.toFixed(1)}s
-        </text>
-
-        <text x="${margin.left + plotW / 2}" y="${H - 3}" text-anchor="middle" font-size="13" fill="#334155" font-weight="900">
-          Tiempo, s
-        </text>
-
-        <text x="18" y="${margin.top + plotH / 2}" transform="rotate(-90 18 ${margin.top + plotH / 2})"
-          text-anchor="middle" font-size="13" fill="#334155" font-weight="900">
-          ${config.yLabel}
-        </text>
-      `;
-    }
-
-    function makePath(data, x, y, getY) {
-      if (!data.length) return "";
-      return data.map((d, i) => {
-        const px = x(d.t);
-        const py = y(getY(d));
-        return `${i === 0 ? "M" : "L"} ${px.toFixed(2)} ${py.toFixed(2)}`;
-      }).join(" ");
-    }
-
-    function drawReadings(current) {
-      const rows = [];
-      const step = niceStep(state.model.tFinal / 8);
-      let count = 1;
-
-      for (let t = 0; t <= state.t + 0.0001; t += step) {
-        const s = stateAtTime(t);
-        rows.push(`
-          <tr>
-            <td>${count}</td>
-            <td>${s.t.toFixed(1)} s</td>
-            <td>${s.h.toFixed(1)} cm</td>
-            <td>${s.rate.toFixed(2)} cm/s</td>
-          </tr>
-        `);
-        count++;
-      }
-
-      if (current.t > 0) {
-        rows.push(`
-          <tr class="current-row">
-            <td>Actual</td>
-            <td>${current.t.toFixed(1)} s</td>
-            <td>${current.h.toFixed(1)} cm</td>
-            <td>${current.rate.toFixed(2)} cm/s</td>
-          </tr>
-        `);
-      }
-
-      readingsBody.innerHTML = rows.join("");
-    }
-
-    function resetSimulation() {
-      const vessel = vessels[state.vesselKey];
-      state.Q = Math.max(1, Number(flowInput.value) || 22);
-      state.speed = Number(speedInput.value) || 1;
-      state.model = buildModel(vessel, state.Q);
-      state.t = 0;
-      state.playing = false;
-      playBtn.textContent = "Iniciar";
-      render();
-    }
-
-    function togglePlay() {
-      state.playing = !state.playing;
-      playBtn.textContent = state.playing ? "Pausar" : "Continuar";
-
-      if (state.t >= state.model.tFinal) {
-        state.t = 0;
-        state.playing = true;
-        playBtn.textContent = "Pausar";
-      }
-    }
-
-    function animate(timestamp) {
-      if (!state.lastFrame) state.lastFrame = timestamp;
-
-      const dt = (timestamp - state.lastFrame) / 1000;
-      state.lastFrame = timestamp;
-
-      if (state.playing) {
-        state.speed = Number(speedInput.value) || 1;
-        state.t += dt * state.speed;
-
-        if (state.t >= state.model.tFinal) {
-          state.t = state.model.tFinal;
-          state.playing = false;
-          playBtn.textContent = "Repetir";
-        }
-
-        render();
-      }
-
-      requestAnimationFrame(animate);
-    }
-
-    function clamp(value, min, max) {
-      return Math.max(min, Math.min(max, value));
-    }
-
-    function niceStep(raw) {
-      if (raw <= 0 || !isFinite(raw)) return 1;
-
-      const power = Math.pow(10, Math.floor(Math.log10(raw)));
-      const normalized = raw / power;
-
-      if (normalized <= 1) return power;
-      if (normalized <= 2) return 2 * power;
-      if (normalized <= 5) return 5 * power;
-      return 10 * power;
-    }
-
-    function makeTicks(max, desired) {
-      const step = niceStep(max / desired);
-      const ticks = [];
-
-      for (let v = 0; v <= max + step * 0.2; v += step) {
-        ticks.push(v);
-      }
-
-      if (ticks[ticks.length - 1] < max) {
-        ticks.push(max);
-      }
-
-      return ticks;
-    }
-
-    function formatTick(value) {
-      if (Math.abs(value) >= 100) return value.toFixed(0);
-      if (Math.abs(value) >= 10) return value.toFixed(0);
-      if (Math.abs(value) >= 1) return value.toFixed(1).replace(".0", "");
-      return value.toFixed(2);
-    }
-
-    vesselSelect.addEventListener("change", () => {
-      state.vesselKey = vesselSelect.value;
-      resetSimulation();
-    });
-
-    flowInput.addEventListener("change", resetSimulation);
-    speedInput.addEventListener("change", () => {
-      state.speed = Number(speedInput.value) || 1;
-    });
-
-    playBtn.addEventListener("click", togglePlay);
-    resetBtn.addEventListener("click", resetSimulation);
-
-    resetSimulation();
-    requestAnimationFrame(animate);
-  </script>
-</body>
-</html>
+      R.render(sc,cam);
+    };
+    tick();return()=>{cancelAnimationFrame(raf);R.dispose();};
+  },[]);
+  useEffect(()=>{const st=stRef.current;if(!st.renderer)return;buildScene(fk,dims,wc,st);},[fk,JSON.stringify(dims)]);
+  const dn=(x,y)=>{const d=stRef.current.drag;d.on=true;d.lx=x;d.ly=y;};
+  const mv=(x,y)=>{const st=stRef.current;if(!st.drag.on)return;st.rot.y+=(x-st.drag.lx)*.013;st.rot.x+=(y-st.drag.ly)*.013;st.drag.lx=x;st.drag.ly=y;};
+  const up=()=>{stRef.current.drag.on=false;};
+  return <canvas ref={cRef} width={200} height={200} style={{width:"100%",height:200,cursor:"grab",display:"block",touchAction:"none"}} onMouseDown={e=>dn(e.clientX,e.clientY)} onMouseMove={e=>mv(e.clientX,e.clientY)} onMouseUp={up} onMouseLeave={up} onTouchStart={e=>dn(e.touches[0].clientX,e.touches[0].clientY)} onTouchMove={e=>mv(e.touches[0].clientX,e.touches[0].clientY)} onTouchEnd={up}/>;
+}
+
+function FillReadout({pct,h,maxH,vol,total,color="#2563eb"}){
+  return(
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,margin:"7px 0 3px"}}>
+      <div style={{background:"#eff6ff",borderRadius:8,padding:"5px 6px",border:`1px solid ${color}22`}}>
+        <div style={{fontSize:8,color:"#64748b",fontWeight:700,textTransform:"uppercase"}}>Nivel</div>
+        <div style={{fontSize:13,color,fontWeight:800}}>{(pct*100).toFixed(1)}%</div>
+      </div>
+      <div style={{background:"#f8fafc",borderRadius:8,padding:"5px 6px",border:"1px solid #e2e8f0"}}>
+        <div style={{fontSize:8,color:"#64748b",fontWeight:700,textTransform:"uppercase"}}>Altura</div>
+        <div style={{fontSize:13,color:"#0f172a",fontWeight:800}}>{h.toFixed(2)} / {maxH.toFixed(1)} cm</div>
+      </div>
+      <div style={{gridColumn:"1 / -1",background:"#ecfeff",borderRadius:8,padding:"5px 6px",border:"1px solid #bae6fd"}}>
+        <div style={{fontSize:8,color:"#64748b",fontWeight:700,textTransform:"uppercase"}}>Volumen llenado</div>
+        <div style={{fontSize:13,color:"#0e7490",fontWeight:800}}>{vol.toFixed(1)} / {total.toFixed(1)} cm3</div>
+      </div>
+    </div>
+  );
+}
+
+function ProfileSketch({rkey,w=46,h=64}){
+  const{cps}=RCP[rkey];const maxR=Math.max(...cps.map(p=>p[1]));const N=80;
+  const toXY=(t,r)=>[(w/2)+(r/maxR)*(w/2-1),h-t*h];
+  const rPts=Array.from({length:N+1},(_,i)=>{const t=i/N;return toXY(t,interpCP(cps,t));});
+  const lPts=[...rPts].reverse().map(([x,y])=>[w-x,y]);
+  const path=[...rPts,...lPts].map(([x,y],i)=>`${i===0?'M':'L'}${x.toFixed(1)},${y.toFixed(1)}`).join(' ')+'Z';
+  return <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{display:'block'}}><path d={path} fill="#bfdbfe" stroke="#1e40af" strokeWidth="1.5" strokeLinejoin="round"/></svg>;
+}
+
+function InfoCard({fk,dims}){
+  const fig=FIGS[fk],vd=getVD(fk,dims);
+  if(fig.isRec)return(
+    <div style={{background:"white",borderRadius:13,padding:12,boxShadow:"0 1px 5px #0001"}}>
+      <div style={{display:'flex',gap:10,alignItems:'flex-start'}}>
+        <ProfileSketch rkey={fk} w={52} h={72}/>
+        <div style={{flex:1}}>
+          <div style={{fontWeight:700,color:"#1e40af",fontSize:12,marginBottom:5}}>{fig.icon} {fig.name}</div>
+          <div style={{display:'flex',gap:5,marginBottom:6}}>
+            <div style={{background:"#dbeafe",borderRadius:7,padding:"4px 8px",textAlign:"center",flex:1}}><div style={{fontSize:13,fontWeight:800,color:"#1e40af"}}>{fig.ml}</div><div style={{fontSize:8,color:"#64748b"}}>ml etiqueta</div></div>
+            <div style={{background:"#dcfce7",borderRadius:7,padding:"4px 8px",textAlign:"center",flex:1}}><div style={{fontSize:13,fontWeight:800,color:"#166534"}}>{fig.vol().toFixed(0)}</div><div style={{fontSize:8,color:"#64748b"}}>ml calculado</div></div>
+          </div>
+          <div style={{background:"#eff6ff",borderRadius:7,padding:"5px 7px",fontSize:9,color:"#1e40af",marginBottom:4,lineHeight:1.5}}>📐 {fig.desc}</div>
+          <div style={{background:"#f0fdf4",borderRadius:7,padding:"5px 7px",fontSize:9,color:"#166534",lineHeight:1.5}}>💡 {fig.hint}</div>
+        </div>
+      </div>
+    </div>
+  );
+  return(
+    <div style={{background:"white",borderRadius:13,padding:12,boxShadow:"0 1px 5px #0001"}}>
+      <div style={{fontWeight:700,color:"#1e40af",fontSize:12,marginBottom:8}}>{fig.icon} {fig.name}</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:5,marginBottom:8}}>
+        {[{l:"Caras",v:fig.faces,bg:"#dbeafe"},{l:"Aristas",v:fig.edges,bg:"#dcfce7"},{l:"Vértices",v:fig.vertices,bg:"#fef9c3"}].map(x=>(
+          <div key={x.l} style={{background:x.bg,borderRadius:8,padding:"5px 2px",textAlign:"center"}}>
+            <div style={{fontSize:16,fontWeight:800,color:"#1e40af"}}>{x.v}</div><div style={{fontSize:9,color:"#64748b"}}>{x.l}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{background:"#fef9c3",borderRadius:8,padding:"6px 8px",fontSize:10,color:"#78350f",lineHeight:1.5}}>🧮 {fig.formula(vd)}</div>
+      {fig.hint&&<div style={{background:"#f0fdf4",borderRadius:8,padding:"5px 8px",fontSize:10,color:"#166534",lineHeight:1.5,marginTop:6}}>💡 {fig.hint}</div>}
+    </div>
+  );
+}
+
+function DimInputs({fk,dims,setDims,rst,accent}){
+  const fig=FIGS[fk];if(!fig.dims||!fig.dims.length)return null;
+  return(<div style={{marginBottom:8}}>{fig.dims.map(d=>(<div key={d.key} style={{marginBottom:5}}><label style={{fontSize:10,color:"#475569",display:"block",marginBottom:2}}>{d.label} ({d.unit})</label><input type="number" min="1" max="99" value={dims[d.key]??d.def} onChange={e=>{setDims(p=>({...p,[d.key]:e.target.value}));rst();}} style={{width:"100%",padding:"4px 6px",borderRadius:6,border:`1.5px solid ${accent}`,fontSize:12,boxSizing:"border-box"}}/></div>))}</div>);
+}
+
+function PredCanvas({maxT,maxH,onFinish,onClear}){
+  const cRef=useRef(),ptsRef=useRef([]),drag=useRef(false);
+  const W=250,H=148,LM=22,BM=18;
+  const redraw=()=>{
+    const c=cRef.current;if(!c)return;const ctx=c.getContext("2d");ctx.clearRect(0,0,W,H);
+    ctx.strokeStyle="#f1f5f9";ctx.lineWidth=.8;
+    for(let i=1;i<5;i++){ctx.beginPath();ctx.moveTo(LM+i*(W-LM)/5,0);ctx.lineTo(LM+i*(W-LM)/5,H-BM);ctx.stroke();ctx.beginPath();ctx.moveTo(LM,i*(H-BM)/5);ctx.lineTo(W,i*(H-BM)/5);ctx.stroke();}
+    ctx.strokeStyle="#94a3b8";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(LM,4);ctx.lineTo(LM,H-BM);ctx.lineTo(W-2,H-BM);ctx.stroke();
+    ctx.fillStyle="#94a3b8";ctx.font="8px sans-serif";
+    ctx.fillText("h",2,10);ctx.fillText(maxH.toFixed(0),2,15);ctx.fillText("0",LM-8,H-BM);ctx.fillText("t",W-8,H-BM+10);ctx.fillText("~"+maxT.toFixed(0)+"s",W-33,H-BM-2);
+    if(!ptsRef.current.length){ctx.fillStyle="#a5b4fc";ctx.font="10px sans-serif";ctx.textAlign="center";ctx.fillText("✏️ Dibuja tu predicción aquí",W/2+LM/2,(H-BM)/2-4);ctx.font="8px sans-serif";ctx.fillStyle="#c4b5fd";ctx.fillText("¿Cómo crees que subirá el agua?",W/2+LM/2,(H-BM)/2+11);ctx.textAlign="left";}
+    if(ptsRef.current.length>1){ctx.strokeStyle="#f97316";ctx.lineWidth=2.5;ctx.setLineDash([5,3]);ctx.beginPath();ptsRef.current.forEach((p,i)=>{const x=LM+p.x*(W-LM-2),y=(H-BM)-p.y*(H-BM-5);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});ctx.stroke();ctx.setLineDash([]);}
+  };
+  useEffect(()=>{redraw();},[maxT,maxH]);
+  const getP=(e,touch=false)=>{const c=cRef.current;if(!c)return null;const r=c.getBoundingClientRect();const src=touch?e.touches[0]:e;const px=(src.clientX-r.left)/r.width*W,py=(src.clientY-r.top)/r.height*H;return{x:Math.max(0,Math.min(1,(px-LM)/(W-LM-2))),y:Math.max(0,Math.min(1,((H-BM)-py)/(H-BM-5)))};};
+  const onDn=(e,t=false)=>{drag.current=true;ptsRef.current=[];const p=getP(e,t);if(p)ptsRef.current.push(p);redraw();};
+  const onMv=(e,t=false)=>{if(!drag.current)return;const p=getP(e,t);if(!p)return;const last=ptsRef.current[ptsRef.current.length-1];if(!last||Math.abs(p.x-last.x)>.007)ptsRef.current.push(p);redraw();};
+  const onUp=()=>{drag.current=false;if(ptsRef.current.length>3)onFinish([...ptsRef.current]);};
+  return(
+    <div style={{background:"white",borderRadius:12,padding:10,boxShadow:"0 1px 5px #0001"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
+        <span style={{fontSize:11,fontWeight:700,color:"#7c3aed"}}>✏️ Dibuja tu predicción</span>
+        <button onClick={()=>{ptsRef.current=[];redraw();onClear();}} style={{fontSize:9,padding:"2px 7px",borderRadius:6,border:"1px solid #e2e8f0",background:"#f8fafc",cursor:"pointer",color:"#64748b"}}>Borrar</button>
+      </div>
+      <canvas ref={cRef} width={W} height={H} style={{width:"100%",height:H,cursor:"crosshair",background:"#f8fafc",borderRadius:8,border:"1.5px dashed #a5b4fc",touchAction:"none",display:"block"}} onMouseDown={e=>onDn(e)} onMouseMove={e=>onMv(e)} onMouseUp={onUp} onMouseLeave={onUp} onTouchStart={e=>{e.preventDefault();onDn(e,true);}} onTouchMove={e=>{e.preventDefault();onMv(e,true);}} onTouchEnd={onUp}/>
+      <div style={{fontSize:9,color:"#94a3b8",textAlign:"center",marginTop:3}}>Dibuja de izquierda → derecha, luego presiona ▶ Iniciar</div>
+    </div>
+  );
+}
+
+export default function App(){
+  const[mode,setMode]=useState("normal");
+  const[fk1,setFk1]=useState("cubo"),[dims1,setDims1]=useState({a:"8"});
+  const[fk2,setFk2]=useState("cilindro"),[dims2,setDims2]=useState({r:"4",h:"10"});
+  const[flow,setFlow]=useState(5);
+  const[run,setRun]=useState(false);
+  const[v1,setV1]=useState(0),[v2,setV2]=useState(0),[sT,setST]=useState(0);
+  const[ch,setCh]=useState([{t:0,h1:0,h2:0}]);
+  const[predPts,setPredPts]=useState([]);
+  const[recPred,setRecPred]=useState(false);
+  const[recPredPts,setRecPredPts]=useState([]);
+  const[showQ,setShowQ]=useState(false);
+
+  const v1R=useRef(0),v2R=useRef(0),tR=useRef(0),chR=useRef([{t:0,h1:0,h2:0}]);
+  const flR=useRef(5),cmpR=useRef(false),d1R=useRef(null),d2R=useRef(null);
+  flR.current=flow;cmpR.current=mode==="comparar";
+  const isCmp=mode==="comparar",isRec=mode==="recipientes",isPred=mode==="prediccion";
+  const fig1=FIGS[fk1],vd1=getVD(fk1,dims1),tV1=fig1.vol(vd1),mH1=fig1.maxH(vd1);
+  const pct1=Math.min(v1/tV1,1),hc1=Math.min(fig1.hAtV(Math.max(v1,0),vd1),mH1);
+  const fig2=FIGS[fk2],vd2=getVD(fk2,dims2),tV2=fig2.vol(vd2),mH2=fig2.maxH(vd2);
+  const pct2=Math.min(v2/tV2,1),hc2=Math.min(fig2.hAtV(Math.max(v2,0),vd2),mH2);
+  d1R.current={tV:tV1,mH:mH1,fig:fig1,vd:vd1};d2R.current={tV:tV2,mH:mH2,fig:fig2,vd:vd2};
+
+  const rst=()=>{setRun(false);v1R.current=v2R.current=tR.current=0;chR.current=[{t:0,h1:0,h2:0}];setV1(0);setV2(0);setST(0);setCh([{t:0,h1:0,h2:0}]);};
+  const cf1=k=>{const dd={};(FIGS[k].dims||[]).forEach(d=>{dd[d.key]=String(d.def);});setFk1(k);setDims1(dd);rst();setRecPredPts([]);};
+  const cf2=k=>{const dd={};(FIGS[k].dims||[]).forEach(d=>{dd[d.key]=String(d.def);});setFk2(k);setDims2(dd);rst();};
+  const chgMode=m=>{
+    setMode(m);rst();setPredPts([]);setRecPred(false);setRecPredPts([]);
+    if(m==='recipientes'&&!FIGS[fk1]?.isRec)cf1('r_barril');
+    else if(m!=='recipientes'&&FIGS[fk1]?.isRec)cf1('cubo');
+  };
+
+  useEffect(()=>{
+    if(!run)return;
+    let raf,lT=null;
+    const loop=ts=>{
+      if(!lT)lT=ts;const dt=Math.min((ts-lT)/1000,.1);lT=ts;
+      const fl=flR.current,cm=cmpR.current,d1=d1R.current,d2=d2R.current;
+      const nv1=Math.min(v1R.current+fl*dt,d1.tV),nv2=cm?Math.min(v2R.current+fl*dt,d2.tV):0;
+      v1R.current=nv1;if(cm)v2R.current=nv2;tR.current+=dt;
+      const nh1=Math.min(d1.fig.hAtV(nv1,d1.vd),d1.mH),nh2=cm?Math.min(d2.fig.hAtV(nv2,d2.vd),d2.mH):0;
+      const lp=chR.current[chR.current.length-1];
+      if(!lp||tR.current-lp.t>=.35){chR.current=[...chR.current,{t:+tR.current.toFixed(1),h1:+nh1.toFixed(2),h2:+nh2.toFixed(2)}];setCh([...chR.current]);}
+      setV1(nv1);if(cm)setV2(nv2);setST(tR.current);
+      if(nv1<d1.tV||(cm&&nv2<d2.tV))raf=requestAnimationFrame(loop);else setRun(false);
+    };
+    raf=requestAnimationFrame(loop);return()=>cancelAnimationFrame(raf);
+  },[run]);
+
+  const dhdtData=ch.slice(1).map((pt,i)=>{const prev=ch[i],dt=pt.t-prev.t;if(dt<=0)return null;return{t:pt.t,v1:+((pt.h1-prev.h1)/dt).toFixed(3),v2:+((pt.h2-prev.h2)/dt).toFixed(3)};}).filter(Boolean);
+  const estT=flow>0?tV1/flow:60;
+
+  // Puntos de predicción activos (modo predicción normal O recipientes+predicción)
+  const activePredPts=(isPred&&predPts.length>2)?predPts:(isRec&&recPred&&recPredPts.length>2)?recPredPts:[];
+  const chartData=activePredPts.length>2?ch.map(pt=>{
+    const tx=pt.t/estT;let lo=null,hi=null;
+    for(let i=0;i<activePredPts.length-1;i++){if(activePredPts[i].x<=tx&&activePredPts[i+1].x>=tx){lo=activePredPts[i];hi=activePredPts[i+1];break;}}
+    let py=activePredPts[0].y;
+    if(lo&&hi){const f=hi.x===lo.x?0:(tx-lo.x)/(hi.x-lo.x);py=lo.y+f*(hi.y-lo.y);}
+    else if(tx>=activePredPts[activePredPts.length-1].x)py=activePredPts[activePredPts.length-1].y;
+    return{...pt,pred:+(py*mH1).toFixed(2)};
+  }):ch;
+
+  const constriccionesH=isRec&&FIGS[fk1]?.isRec?recConstrictions(fk1):[];
+  const showPred=activePredPts.length>2;
+  const full=pct1>=1&&(!isCmp||pct2>=1);
+  const bBg=run?"#f59e0b":full?"#10b981":"#2563eb",bTx=run?"⏸ Pausa":full?"🔄 Reiniciar":"▶ Iniciar";
+
+  const FigSel=(cur,onSel,skip,onlyRec=false)=>(
+    <div style={{display:"flex",flexWrap:"wrap",gap:4,marginBottom:8}}>
+      {Object.entries(FIGS).filter(([k,f])=>!!f.isRec===onlyRec&&k!==skip).map(([k,f])=>(
+        <button key={k} onClick={()=>onSel(k)} style={{padding:"3px 7px",borderRadius:11,border:"1.5px solid",fontSize:10,fontWeight:600,cursor:"pointer",borderColor:cur===k?"#2563eb":"#cbd5e1",background:cur===k?"#2563eb":"white",color:cur===k?"white":"#334155"}}>{f.icon} {f.name}</button>
+      ))}
+    </div>
+  );
+  const ProgBar=(pct,col)=>(<div style={{background:"#e2e8f0",borderRadius:7,height:10,overflow:"hidden",marginTop:4}}><div style={{width:`${pct*100}%`,height:"100%",borderRadius:7,background:pct>=1?"#10b981":col,transition:"width .08s"}}/></div>);
+
+  return(
+    <div style={{fontFamily:"sans-serif",background:"#f0f9ff",minHeight:"100vh",padding:"12px 8px"}}>
+      <div style={{maxWidth:990,margin:"0 auto"}}>
+        <div style={{textAlign:"center",marginBottom:10}}>
+          <div style={{fontSize:20,fontWeight:800,color:"#1e40af"}}>💧 Llena la Figura — Volumen 3D</div>
+          <div style={{color:"#64748b",fontSize:11,marginTop:2}}>Arrastra para rotar · Matemáticas Secundaria</div>
+        </div>
+
+        <div style={{display:"flex",justifyContent:"center",gap:5,marginBottom:12,flexWrap:"wrap"}}>
+          {[["normal","🔵","Normal"],["prediccion","✏️","Predicción"],["recipientes","🫙","Recipientes"],["comparar","⚖️","Comparar"]].map(([k,ic,lb])=>(
+            <button key={k} onClick={()=>chgMode(k)} style={{padding:"6px 13px",borderRadius:16,border:"2px solid",cursor:"pointer",fontWeight:700,fontSize:11,borderColor:mode===k?"#2563eb":"#cbd5e1",background:mode===k?"#2563eb":"white",color:mode===k?"white":"#334155"}}>{ic} {lb}</button>
+          ))}
+        </div>
+
+        {isPred&&<div style={{textAlign:"center",marginBottom:10,background:"#f5f3ff",borderRadius:10,padding:"7px 12px",fontSize:11,color:"#7c3aed",maxWidth:600,margin:"0 auto 10px"}}>✏️ <strong>Modo Predicción:</strong> Dibuja cómo crees que subirá el agua, luego presiona ▶ para comparar.</div>}
+
+        {/* Selector visual de recipientes */}
+        {isRec&&(
+          <div style={{marginBottom:10}}>
+            <div style={{display:"flex",gap:7,flexWrap:"wrap",justifyContent:"center",marginBottom:8}}>
+              {Object.entries(FIGS).filter(([,f])=>f.isRec).map(([k,f])=>(
+                <button key={k} onClick={()=>cf1(k)} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4,padding:"9px 11px",borderRadius:14,border:"2px solid",cursor:"pointer",background:fk1===k?"#eff6ff":"white",borderColor:fk1===k?"#2563eb":"#e2e8f0",minWidth:75}}>
+                  <ProfileSketch rkey={k} w={44} h={60}/>
+                  <div style={{fontSize:10,fontWeight:700,color:fk1===k?"#1e40af":"#334155",lineHeight:1.2}}>{f.name}</div>
+                  <div style={{fontSize:9,color:"#64748b"}}>{f.ml} ml</div>
+                </button>
+              ))}
+            </div>
+            {/* Toggle predicción en recipientes */}
+            <div style={{display:"flex",justifyContent:"center"}}>
+              <button onClick={()=>{setRecPred(p=>!p);setRecPredPts([]);rst();}}
+                style={{padding:"6px 16px",borderRadius:14,border:"2px solid",cursor:"pointer",fontWeight:700,fontSize:11,
+                  borderColor:recPred?"#7c3aed":"#cbd5e1",background:recPred?"#7c3aed":"white",color:recPred?"white":"#334155"}}>
+                {recPred?"✅ Predicción activa — dibuja antes de iniciar":"✏️ Activar predicción del recipiente"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div style={{display:"flex",flexWrap:"wrap",gap:12,justifyContent:"center",alignItems:"flex-start"}}>
+          {/* Figura 1 */}
+          <div style={{background:"white",borderRadius:14,padding:13,width:213,boxShadow:"0 1px 6px #0001",flexShrink:0}}>
+            <div style={{fontWeight:700,color:isRec?"#0891b2":"#2563eb",fontSize:12,marginBottom:8}}>
+              {isRec?"🫙 Recipiente":isCmp?"🔵 Figura 1":"🔵 Figura"}
+            </div>
+            {!isRec&&FigSel(fk1,cf1,isCmp?fk2:null,false)}
+            {!isRec&&<DimInputs fk={fk1} dims={dims1} setDims={setDims1} rst={rst} accent="#93c5fd"/>}
+            <Fig3D fk={fk1} dims={dims1} fillPct={pct1} wc={0x3b82f6}/>
+            <FillReadout pct={pct1} h={hc1} maxH={mH1} vol={v1} total={tV1} color="#2563eb"/>
+            <div style={{fontSize:9,color:"#94a3b8",textAlign:"center",marginTop:2,marginBottom:2}}>🖱️ arrastra para rotar</div>
+            {ProgBar(pct1,"#3b82f6")}
+            <div style={{fontSize:10,color:"#475569",marginTop:5,lineHeight:1.8,textAlign:"center"}}>
+              <div><strong>{v1.toFixed(1)}</strong>/<strong>{tV1.toFixed(1)}</strong> cm³ · <strong>{(pct1*100).toFixed(1)}%</strong></div>
+              <div>h: <strong>{hc1.toFixed(2)}</strong>/<strong>{mH1.toFixed(1)}</strong> cm · <strong>{sT.toFixed(1)}</strong>s</div>
+            </div>
+          </div>
+
+          {/* Figura 2 */}
+          {isCmp&&(
+            <div style={{background:"white",borderRadius:14,padding:13,width:213,boxShadow:"0 1px 6px #0001",flexShrink:0}}>
+              <div style={{fontWeight:700,color:"#ea580c",fontSize:12,marginBottom:8}}>🟠 Figura 2</div>
+              {FigSel(fk2,cf2,fk1,false)}
+              <DimInputs fk={fk2} dims={dims2} setDims={setDims2} rst={rst} accent="#fdba74"/>
+              <Fig3D fk={fk2} dims={dims2} fillPct={pct2} wc={0xf97316}/>
+              <FillReadout pct={pct2} h={hc2} maxH={mH2} vol={v2} total={tV2} color="#ea580c"/>
+              <div style={{fontSize:9,color:"#94a3b8",textAlign:"center",marginTop:2,marginBottom:2}}>🖱️ arrastra para rotar</div>
+              {ProgBar(pct2,"#f97316")}
+              <div style={{fontSize:10,color:"#475569",marginTop:5,lineHeight:1.8,textAlign:"center"}}>
+                <div><strong>{v2.toFixed(1)}</strong>/<strong>{tV2.toFixed(1)}</strong> cm³ · <strong>{(pct2*100).toFixed(1)}%</strong></div>
+                <div>h: <strong>{hc2.toFixed(2)}</strong>/<strong>{mH2.toFixed(1)}</strong> cm</div>
+              </div>
+            </div>
+          )}
+
+          {/* Panel derecho */}
+          <div style={{display:"flex",flexDirection:"column",gap:10,width:258,flexShrink:0}}>
+
+            {/* Controles */}
+            <div style={{background:"white",borderRadius:13,padding:12,boxShadow:"0 1px 5px #0001"}}>
+              <div style={{fontWeight:700,color:"#1e40af",fontSize:12,marginBottom:7}}>🎛️ Controles</div>
+              <div style={{fontSize:10,color:"#475569",fontWeight:600,marginBottom:2}}>💧 Flujo: <span style={{color:"#2563eb"}}>{flow} cm³/s</span></div>
+              <input type="range" min=".5" max="30" step=".5" value={flow} onChange={e=>setFlow(parseFloat(e.target.value))} style={{width:"100%",accentColor:"#2563eb",marginBottom:2}}/>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:"#94a3b8",marginBottom:9}}><span>🐢 Lento</span><span>🚀 Rápido</span></div>
+              <div style={{display:"flex",gap:7}}>
+                <button onClick={()=>{if(full){rst();return;}setRun(r=>!r);}} style={{flex:1,padding:"8px 0",borderRadius:8,border:"none",background:bBg,color:"white",fontWeight:700,fontSize:13,cursor:"pointer"}}>{bTx}</button>
+                <button onClick={()=>{rst();setRecPredPts([]);}} style={{padding:"8px 11px",borderRadius:8,border:"none",background:"#e2e8f0",color:"#475569",fontWeight:700,cursor:"pointer"}}>🔄</button>
+              </div>
+            </div>
+
+            <InfoCard fk={fk1} dims={dims1}/>
+            {isCmp&&<InfoCard fk={fk2} dims={dims2}/>}
+
+            {/* Canvas de predicción — modo normal */}
+            {isPred&&!run&&pct1<1&&<PredCanvas maxT={estT} maxH={mH1} onFinish={pts=>setPredPts(pts)} onClear={()=>setPredPts([])}/>}
+            {isPred&&predPts.length>2&&pct1<1&&!run&&<div style={{background:"#f5f3ff",borderRadius:10,padding:"7px 10px",fontSize:10,color:"#7c3aed",textAlign:"center"}}>✅ Predicción guardada · Presiona ▶ para ver si acertaste</div>}
+
+            {/* Canvas de predicción — modo recipientes */}
+            {isRec&&recPred&&!run&&pct1<1&&(
+              <PredCanvas maxT={estT} maxH={mH1} onFinish={pts=>setRecPredPts(pts)} onClear={()=>setRecPredPts([])}/>
+            )}
+            {isRec&&recPred&&recPredPts.length>2&&pct1<1&&!run&&(
+              <div style={{background:"#f5f3ff",borderRadius:10,padding:"7px 10px",fontSize:10,color:"#7c3aed",textAlign:"center"}}>
+                ✅ Predicción guardada · Presiona ▶ para comparar con la gráfica real
+              </div>
+            )}
+            {isRec&&recPred&&pct1>=1&&(
+              <div style={{background:"#fef9c3",borderRadius:10,padding:"8px 10px",fontSize:10,color:"#78350f",lineHeight:1.6}}>
+                <strong>🧐 Compara las curvas:</strong><br/>
+                — <span style={{color:"#2563eb",fontWeight:700}}>Azul sólida</span> = comportamiento real<br/>
+                — <span style={{color:"#f97316",fontWeight:700}}>Naranja punteada</span> = tu predicción
+              </div>
+            )}
+
+            {/* Gráfica h(t) */}
+            <div style={{background:"white",borderRadius:13,padding:12,boxShadow:"0 1px 5px #0001"}}>
+              <div style={{fontWeight:700,color:"#1e40af",fontSize:12,marginBottom:2}}>
+                📈 {isRec?`${fig1.icon} ${fig1.name} — `:''}Altura vs Tiempo
+              </div>
+              {isRec&&constriccionesH.length>0&&<div style={{fontSize:9,color:"#94a3b8",marginBottom:4,display:"flex",alignItems:"center",gap:4}}><span style={{display:"inline-block",width:18,borderTop:"2px dashed #94a3b8",flexShrink:0}}></span><span>líneas = constricciones del recipiente</span></div>}
+              {showPred&&<div style={{fontSize:9,color:"#f97316",marginBottom:4}}>🟠 Punteada = tu predicción · Sólida = real</div>}
+              <ResponsiveContainer width="100%" height={isRec?185:150}>
+                <LineChart data={chartData} margin={{top:5,right:8,bottom:22,left:-5}}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9"/>
+                  <XAxis dataKey="t" tick={{fontSize:9}} label={{value:"Tiempo (s)",position:"insideBottom",offset:-12,fontSize:9,fill:"#64748b"}}/>
+                  <YAxis tick={{fontSize:9}} label={{value:"Altura (cm)",angle:-90,position:"insideLeft",offset:16,fontSize:9,fill:"#64748b"}}/>
+                  <Tooltip formatter={(v,n)=>[`${v} cm`,n]} labelFormatter={l=>`t = ${l} s`} contentStyle={{fontSize:10,borderRadius:8}}/>
+                  {(isCmp||showPred)&&<Legend wrapperStyle={{fontSize:9,paddingTop:4}}/>}
+                  {constriccionesH.map((h,i)=>(
+                    <ReferenceLine key={i} y={h} stroke="#94a3b8" strokeDasharray="4 3"
+                      label={{value:`${h}cm`,position:"insideRight",fontSize:8,fill:"#94a3b8"}}/>
+                  ))}
+                  <Line type="monotone" dataKey="h1" stroke="#2563eb" dot={false} strokeWidth={2.5} name={isCmp?fig1.name:showPred?"Gráfica real":"Altura"} isAnimationActive={false}/>
+                  {isCmp&&<Line type="monotone" dataKey="h2" stroke="#f97316" dot={false} strokeWidth={2.5} name={fig2.name} isAnimationActive={false}/>}
+                  {showPred&&<Line type="monotone" dataKey="pred" stroke="#f97316" dot={false} strokeWidth={2} strokeDasharray="6 3" name="Mi predicción" isAnimationActive={false}/>}
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Gráfica dh/dt */}
+            <div style={{background:"white",borderRadius:13,padding:12,boxShadow:"0 1px 5px #0001"}}>
+              <div style={{fontWeight:700,color:"#059669",fontSize:12,marginBottom:2}}>⚡ Velocidad de subida (dh/dt)</div>
+              <div style={{fontSize:9,color:"#94a3b8",marginBottom:5}}>Pico alto = sección angosta · Valle = sección ancha</div>
+              <ResponsiveContainer width="100%" height={isRec?140:120}>
+                <LineChart data={dhdtData} margin={{top:4,right:8,bottom:22,left:-5}}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9"/>
+                  <XAxis dataKey="t" tick={{fontSize:9}} label={{value:"Tiempo (s)",position:"insideBottom",offset:-12,fontSize:9,fill:"#64748b"}}/>
+                  <YAxis tick={{fontSize:9}} width={34} label={{value:"cm/s",angle:-90,position:"insideLeft",offset:16,fontSize:9,fill:"#64748b"}}/>
+                  <Tooltip formatter={(v,n)=>[`${v} cm/s`,n]} labelFormatter={l=>`t = ${l} s`} contentStyle={{fontSize:10,borderRadius:8}}/>
+                  {isCmp&&<Legend wrapperStyle={{fontSize:9,paddingTop:4}}/>}
+                  <Line type="monotone" dataKey="v1" stroke="#10b981" dot={false} strokeWidth={2} name={isCmp?fig1.name+" dh/dt":"dh/dt"} isAnimationActive={false}/>
+                  {isCmp&&<Line type="monotone" dataKey="v2" stroke="#f59e0b" dot={false} strokeWidth={2} name={fig2.name+" dh/dt"} isAnimationActive={false}/>}
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Preguntas guiadas */}
+            <div style={{background:"white",borderRadius:13,padding:12,boxShadow:"0 1px 5px #0001"}}>
+              <button onClick={()=>setShowQ(q=>!q)} style={{display:"flex",justifyContent:"space-between",alignItems:"center",width:"100%",background:"none",border:"none",cursor:"pointer",padding:0}}>
+                <span style={{fontWeight:700,color:"#1e40af",fontSize:12}}>🧠 Preguntas guiadas</span>
+                <span style={{fontSize:12,color:"#94a3b8"}}>{showQ?"▲":"▼"}</span>
+              </button>
+              {showQ&&(
+                <div style={{marginTop:8}}>
+                  {(QUESTIONS[fk1]||[]).map((q,i)=>(
+                    <div key={i} style={{background:"#f8fafc",borderRadius:8,padding:"7px 9px",marginBottom:5,fontSize:11,color:"#334155",lineHeight:1.5}}>
+                      <strong style={{color:"#7c3aed"}}>{i+1}.</strong> {q}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
